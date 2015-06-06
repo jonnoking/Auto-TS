@@ -64,6 +64,8 @@ foreach($Library in $SCLists.List) {
     $SCS.Update();
 
     $lib = $SCS.Lists[$Library.Name]
+    $lib.OnQuickLaunch = $true;
+    $lib.Update();
 
     # CUSTOMIZE LIBRARY
     foreach($Field in $Library.CustomFields.Field) {
@@ -105,6 +107,13 @@ foreach($Library in $SCLibraries.Library) {
     $SCS.Update();
     
     $lib = $SCS.Lists[$Library.Name]
+    $lib.OnQuickLaunch = $true;
+    $lib.ContentTypesEnabled = $true
+    #$lib.Update();
+
+    $DocSet = $SCS.ContentTypes["Document Set"]
+    $ct = $lib.ContentTypes.Add($DocSet)
+    $lib.Update();
 
     # CUSTOMIZE LIBRARY
     foreach($Field in $Library.CustomFields.Field) {
@@ -150,6 +159,8 @@ foreach($Site in $SCSites.Site) {
 
     # CUSTOMIZE SUB SITE - LISTS
     $SCLists = $Site.Lists
+    $lib.OnQuickLaunch = $true;
+    $lib.Update();
 
     foreach($Library in $SCLists.List) {    
 
@@ -157,6 +168,8 @@ foreach($Site in $SCSites.Site) {
         $NewSubSite.Update();
 
         $lib = $NewSubSite.Lists[$Library.Name]
+        $lib.OnQuickLaunch = $true;
+        $lib.Update();
 
         # CUSTOMIZE LIBRARY
         foreach($Field in $Library.CustomFields.Field) {
@@ -195,6 +208,13 @@ foreach($Site in $SCSites.Site) {
         $NewSubSite.Update();
 
         $lib = $NewSubSite.Lists[$Library.Name]
+        $lib.OnQuickLaunch = $true;
+        $lib.ContentTypesEnabled = $true
+        #$lib.Update();
+
+        $DocSet = $SCS.ContentTypes["Document Set"]
+        $ct = $lib.ContentTypes.Add($DocSet)
+        $lib.Update();
 
         # CUSTOMIZE LIBRARY
         foreach($Field in $Library.CustomFields.Field) {
