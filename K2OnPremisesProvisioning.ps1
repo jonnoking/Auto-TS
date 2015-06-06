@@ -17,7 +17,8 @@ $BaseUrl = $config.Environment.Settings.SiteBaseUrl
 
 $SCName = $config.Environment.SiteCollection.Name
 $SCDescription = $config.Environment.SiteCollection.Description
-$SCUrl = $BaseUrl + "/sites/" + $SCName.Replace(" ", "")
+$SCUrlName = $config.Environment.SiteCollection.UrlName
+$SCUrl = $BaseUrl + "/sites/" + $SCUrlName
 $SCTemplate = $config.Environment.SiteCollection.Template
 $SCOwner = $config.Environment.SiteCollection.Owner
 $SCSecondaryOwner = $config.Environment.SiteCollection.SecoondaryOwner
@@ -140,10 +141,10 @@ $SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
 
 foreach($Site in $SCSites.Site) {
 
-    $SiteUrl = $SCUrl + "/" + $Site.Name
+    $SiteUrl = $SCUrl + "/" + $Site.UrlName
     #Remove-SPWeb -Identity $SiteUrl -Confirm:$false
 
-    Write-Output $siteUrl
+    Write-Output $SiteUrl
     $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
 
 
@@ -201,6 +202,7 @@ foreach($Site in $SCSites.Site) {
             
             $LookupListName = $Field.GetAttribute("List");
             
+            # Not working - Column found but list doesn't get reference
             if($LookupListName.StartsWith("SC.")) {
                 #$LN = $LookupListName.Replace("SC.", "")
                 $LookupList = $SCS.Lists[$LookupListName.Replace("SC.", "")]

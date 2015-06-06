@@ -7,6 +7,7 @@
   </Settings>
   <SiteCollection>
     <Name>Jonno 2</Name>
+    <UrlName>Jonno2</UrlName>
     <Description>Jonno 2</Description>
     <Template>STS#0</Template>
     <Owner>denallix\administrator</Owner>
@@ -151,6 +152,7 @@
     <Sites>
       <Site>
         <Name>Finance Portal</Name>
+        <UrlName>Finance</UrlName>
         <Description>Finance Portal</Description>
         <Template>STS#0</Template>
         <Language>1033</Language>
@@ -197,6 +199,52 @@
             <ListData>
             </ListData>
           </Library>
+        </Libraries>
+      </Site>
+      <Site>
+        <Name>Customer Portal</Name>
+        <UrlName>Customer</UrlName>
+        <Description>Customer Portal</Description>
+        <Template>STS#0</Template>
+        <Language>1033</Language>
+        <Lists>
+        </Lists>
+        <Libraries>
+          <Library>
+            <Name>Contracts</Name>
+            <Description>Contracts</Description>
+            <ListType>DocumentLibrary</ListType>
+            <CustomFields>
+              <Field Type='User' DisplayName='Account Manager' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Account Manager' StaticName="Account Manager"/>
+              <Field Type='DateTime' DisplayName='Renewed On' Format='DateOnly' Name='Renewed On' StaticName="Renewed On"/>
+              <Field Type='DateTime' DisplayName='Expires On' Format='DateOnly' Name='Expires On' StaticName="Expires On"/>
+              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </Library>
+        </Libraries>
+      </Site>
+      <Site>
+        <Name>Employee Portal</Name>
+        <UrlName>Employee</UrlName>
+        <Description>Employee Portal</Description>
+        <Template>STS#0</Template>
+        <Language>1033</Language>
+        <Lists>
+          <List>
+            <Name>Support Engineers</Name>
+            <Description>Support Engineers</Description>
+            <ListType>GenericList</ListType>
+            <CustomFields>
+              <Field Type='User' DisplayName='Engineer' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Engineer' StaticName="Engineer"/>
+              <Field Type='Text' DisplayName='Support Category' Required='FALSE' MaxLength='255' StaticName='Support Category' Name='Support Category'/>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </List>
+        </Lists>
+        <Libraries>
         </Libraries>
       </Site>
     </Sites>
