@@ -274,6 +274,7 @@ foreach($Site in $SCSites.Site) {
                     $File = Get-ChildItem $LibFile
                     $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
                 
+                    $LibFolder = $NewSubSite.GetFolder($Library.Name);
 
                     $LibFiles = $LibFolder.Files
                 
