@@ -54,27 +54,174 @@ Write-Host -ForegroundColor Green "Site Collection Created"
 
 $SCS = Get-SPWeb -Identity $SCUrl
 
-# CUSTOMIZE PARENT SITE
-[xml]$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
+# CUSTOMIZE PARENT SITE - LISTS
+$SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
 
-foreach($Library in $SCLibraries.Library) {    
-    $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]::DocumentLibrary);
+foreach($Library in $SCLists.List) {    
+
+    $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
     $SCS.Update();
 
+    $lib = $SCS.Lists[$Library.Name]
 
-    # CUSTOMIZE LIST
+    # CUSTOMIZE LIBRARY
     foreach($Field in $Library.CustomFields.Field) {
 
-        $lib = $SCS.Lists[$Library.Name]
+        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
+            
+            $LookupListName = $Field.GetAttribute("List");
+            $LookupList = $SCS.Lists[$LookupListName]
+            $LookupListId = "{" +$LookupList.ID + "}"
+            $Field.SetAttribute("List", $LookupListId) 
+        }
+
         $regionCol = $Field.OuterXml
         $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
         $lib.Update();
-
     }
 
+
+    $ListData = $Library.ListData
+    foreach($ItemData in $ListData.Item) {
+
+        $spItem = $lib.AddItem()
+
+        foreach($ItemField in $ItemData.Field) {
+            $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+        }
+        
+        $spItem.Update()
+    }
 
 }
 
 
+# CUSTOMIZE PARENT SITE - LIBRARIES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
+
+foreach($Library in $SCLibraries.Library) {    
+    $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
+    $SCS.Update();
+
+    $lib = $SCS.Lists[$Library.Name]
+
+    # CUSTOMIZE LIBRARY
+    foreach($Field in $Library.CustomFields.Field) {
+        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
+            
+            $LookupListName = $Field.GetAttribute("List");
+            $LookupList = $SCS.Lists[$LookupListName]
+            $LookupListId = "{" +$LookupList.ID + "}"
+            $Field.SetAttribute("List", $LookupListId) 
+        }
+        $regionCol = $Field.OuterXml
+        $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
+        $lib.Update();
+    }
+
+    $ListData = $Library.ListData
+    foreach($ItemData in $ListData.Item) {
+
+        $spItem = $lib.AddItem()
+
+        foreach($ItemField in $ItemData.Field) {
+            $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+        }
+        
+        $spItem.Update()
+    }
+
+}
 
 
+#REGION Create Sites
+# CUSTOMIZE SITE - SITES
+$SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
+
+foreach($Site in $SCSites.Site) {
+
+    $SiteUrl = $SCUrl + $Site.Name
+    #Remove-SPWeb -Identity $SiteUrl -Confirm:$false
+
+    Write-Output $siteUrl
+    $NewSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
+
+
+    # CUSTOMIZE SUB SITE - LISTS
+    $SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
+
+    foreach($Library in $SCLists.List) {    
+
+        $NewSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
+        $NewSite.Update();
+
+        $lib = $NewSite.Lists[$Library.Name]
+
+        # CUSTOMIZE LIBRARY
+        foreach($Field in $Library.CustomFields.Field) {
+        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
+            
+            $LookupListName = $Field.GetAttribute("List");
+            $LookupList = $SCS.Lists[$LookupListName]
+            $LookupListId = "{" +$LookupList.ID + "}"
+            $Field.SetAttribute("List", $LookupListId) 
+        }
+            $regionCol = $Field.OuterXml
+            $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
+            $lib.Update();
+        }
+
+
+        $ListData = $Library.ListData
+        foreach($ItemData in $ListData.Item) {
+
+            $spItem = $lib.AddItem()
+
+            foreach($ItemField in $ItemData.Field) {
+                $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+            }
+        
+            $spItem.Update()
+        }
+
+    }
+
+    # CUSTOMIZE SUB SITE - LIBRARIES
+    $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
+
+    foreach($Library in $SCLibraries.Library) {    
+        $NewSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
+        $NewSite.Update();
+
+        $lib = $NewSite.Lists[$Library.Name]
+
+        # CUSTOMIZE LIBRARY
+        foreach($Field in $Library.CustomFields.Field) {
+        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
+            
+            $LookupListName = $Field.GetAttribute("List");
+            $LookupList = $SCS.Lists[$LookupListName]
+            $LookupListId = "{" +$LookupList.ID + "}"
+            $Field.SetAttribute("List", $LookupListId) 
+        }
+            $regionCol = $Field.OuterXml
+            $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
+            $lib.Update();
+        }
+
+        $ListData = $Library.ListData
+        foreach($ItemData in $ListData.Item) {
+
+            $spItem = $lib.AddItem()
+
+            foreach($ItemField in $ItemData.Field) {
+                $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+            }
+        
+            $spItem.Update()
+        }
+
+    }
+
+}
+#ENDREGION Create Sites

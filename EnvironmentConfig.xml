@@ -17,12 +17,12 @@
       <List>
         <Name>Region</Name>
         <Description>Regions</Description>
-        <Type>GenericList</Type>
+        <ListType>GenericList</ListType>
         <CustomFields>
           <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
           <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
         </CustomFields>
-        <Data>
+        <ListData>
           <Item>
             <Field Property="Title">North America</Field>
             <Field Property="Description">Sales in North America</Field>
@@ -43,31 +43,79 @@
             <Field Property="Description">Sales in Europe</Field>
             <Field Property="Manager">barry@denallix.com</Field>
           </Item>
-        </Data>
+        </ListData>      
+    </List>
+      <List>
+        <Name>Products</Name>
+        <Description>Products</Description>
+        <ListType>GenericList</ListType>
+        <CustomFields>
+          <Field Type='Note' DisplayName='Description' Required='FALSE' NumLines='6' RichText='FALSE' Sortable='FALSE' StaticName='Description' Name='Description' />
+          <Field Type='Choice' DisplayName='Units' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Units' Name='Units'>
+            <Default>Hours</Default>
+            <Choices>
+              <Choice>Hours</Choice>
+              <Choice>Per User</Choice>
+              <Choice>Server</Choice>
+            </Choices>
+          </Field>
+          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+        </CustomFields>
+        <ListData>
+          <Item>
+            <Field Property="Title">North America</Field>
+            <Field Property="Description">Sales in North America</Field>
+            <Field Property="Manager">james@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">APAC</Field>
+            <Field Property="Description">Sales in APAC</Field>
+            <Field Property="Manager">bob@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">EMEA</Field>
+            <Field Property="Description">Sales in EMEA</Field>
+            <Field Property="Manager">holly@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Europe</Field>
+            <Field Property="Description">Sales in Europe</Field>
+            <Field Property="Manager">barry@denallix.com</Field>
+          </Item>
+        </ListData>
       </List>
     </Lists>
     <Libraries>
       <Library>
         <Name>Draft Quotes</Name>
         <Description>Draft Quotes</Description>
-        <ListType>[Microsoft.SharePoint.SPListTemplateType]::DocumentLibrary</ListType>
+        <ListType>DocumentLibrary</ListType>
         <CustomFields>
-          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
-          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+          <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
+            <Default>Software</Default>
+            <Choices>
+              <Choice>Software</Choice>
+              <Choice>Services</Choice>
+              <Choice>Training</Choice>
+            </Choices>
+          </Field>
+          <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date'/>
+          <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
         </CustomFields>
-        <Data>
-        </Data>
+        <ListData>
+        </ListData>
       </Library>
       <Library>
         <Name>Sales Quotes</Name>
         <Description>Sales Quotes</Description>
-        <ListType>[Microsoft.SharePoint.SPListTemplateType]::DocumentLibrary</ListType>
+        <ListType>DocumentLibrary</ListType>
         <CustomFields>
           <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
           <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
         </CustomFields>
-        <Data>
-        </Data>
+        <ListData>
+        </ListData>
       </Library>
     </Libraries>
     <Sites>
@@ -75,6 +123,7 @@
         <Name></Name>
         <Description></Description>
         <Template></Template>
+        <Language></Language>
         <Lists>
           <List>
             <Name></Name>
@@ -83,13 +132,13 @@
             <CustomFields>
               <Field Type='Text' DisplayName='Region' Required='FALSE' MaxLength='255' StaticName='Region' Name='Region'/>
             </CustomFields>
-            <Data>
+            <ListData>
               <Item>
                 <Field Property=""></Field>
                 <Field Property=""></Field>
               </Item>
-            </Data>
-          </List>
+            </ListData>          
+        </List>
         </Lists>
         <Libraries>
           <Library></Library>
