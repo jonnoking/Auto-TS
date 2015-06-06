@@ -132,8 +132,10 @@ foreach($Library in $SCLibraries.Library) {
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
+    # Upload File
+    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
         $spItem = $null
-
+        
         foreach($ItemField in $ItemData.Field) {
             if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
 
@@ -261,13 +263,33 @@ foreach($Site in $SCSites.Site) {
         $ListData = $Library.ListData
         foreach($ItemData in $ListData.Item) {
 
-            $spItem = $lib.AddItem()
+            # Upload File
+            $spItem = $null
+        
+            foreach($ItemField in $ItemData.Field) {
+                if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
+
+                    # Assumes local file
+                    $LibFile = $ItemField.InnerText
+                    $File = Get-ChildItem $LibFile
+                    $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+
+                    $LibFiles = $LibFolder.Files
+                
+                    $spItem = $LibFiles.Add($Library.Name+"/"+$LibFileName, $File.OpenRead(),$false)
+                    break
+                }
+            }
 
             foreach($ItemField in $ItemData.Field) {
-                $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+                if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+
+                    $spItem.Item[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
+                }
             }
-        
-            $spItem.Update()
+
+            $spItem.Item.Update()
         }
 
     }

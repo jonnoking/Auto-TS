@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Environment>
   <Settings>
-    <User></User>
-    <UserPassword></UserPassword>
+    <TenantAdmin></TenantAdmin>
+    <TenantAdminPassword></TenantAdminPassword>
     <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
+    <SiteAdminUrl>https://portal.denallix.com</SiteAdminUrl>
   </Settings>
   <SiteCollection>
     <Name>Jonno 2</Name>
@@ -13,6 +14,7 @@
     <Owner>denallix\administrator</Owner>
     <SecondaryOwner>denallix\k2webservice</SecondaryOwner>
     <Language>1033</Language>
+    <Quota>100</Quota>
     <Image></Image>
     <Lists>
       <List>
