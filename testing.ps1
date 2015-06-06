@@ -1,18 +1,12 @@
-﻿# Load Config
-[xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfig.xml
-$SCLibraries = $config.SelectSingleNode("/Environment/SiteCollection/Lists")
+﻿# Disable Execution Policy
+Set-ExecutionPolicy Unrestricted
 
-foreach($Library in $SCLibraries.List) {    
-    Write-Host $Library.Name
-    Write-Host $Library.Description
-    Write-Host $Library.ListType
-    
-    $a = [Microsoft.SharePoint.SPListTemplateType]$Library.ListType
-
-Write-Host
+# Load SP Snapin
+Add-PsSnapin Microsoft.SharePoint.PowerShell -ErrorAction:SilentlyContinue
 
 
-        foreach($Field in $Library.CustomFields.Field) {
-            Write-Host $Field.OuterXml
-        }
-}
+$SCS = Get-SPWeb -Identity "https://portal.denallix.com/"
+
+$L = $SCS.Lists["Customer Tickets"].SchemaXml
+
+Write-Output($L)

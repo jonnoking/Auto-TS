@@ -102,7 +102,7 @@ $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
 foreach($Library in $SCLibraries.Library) {    
     $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
     $SCS.Update();
-
+    
     $lib = $SCS.Lists[$Library.Name]
 
     # CUSTOMIZE LIBRARY
@@ -140,22 +140,22 @@ $SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
 
 foreach($Site in $SCSites.Site) {
 
-    $SiteUrl = $SCUrl + $Site.Name
+    $SiteUrl = $SCUrl + "/" + $Site.Name
     #Remove-SPWeb -Identity $SiteUrl -Confirm:$false
 
     Write-Output $siteUrl
-    $NewSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
+    $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
 
 
     # CUSTOMIZE SUB SITE - LISTS
-    $SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
+    $SCLists = $Site.Lists
 
     foreach($Library in $SCLists.List) {    
 
-        $NewSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-        $NewSite.Update();
+        $NewSubSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
+        $NewSubSite.Update();
 
-        $lib = $NewSite.Lists[$Library.Name]
+        $lib = $NewSubSite.Lists[$Library.Name]
 
         # CUSTOMIZE LIBRARY
         foreach($Field in $Library.CustomFields.Field) {
@@ -187,20 +187,27 @@ foreach($Site in $SCSites.Site) {
     }
 
     # CUSTOMIZE SUB SITE - LIBRARIES
-    $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
+    $SCLibraries = $Site.Libraries
 
     foreach($Library in $SCLibraries.Library) {    
-        $NewSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-        $NewSite.Update();
+        $NewSubSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
+        $NewSubSite.Update();
 
-        $lib = $NewSite.Lists[$Library.Name]
+        $lib = $NewSubSite.Lists[$Library.Name]
 
         # CUSTOMIZE LIBRARY
         foreach($Field in $Library.CustomFields.Field) {
         if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
             
             $LookupListName = $Field.GetAttribute("List");
-            $LookupList = $SCS.Lists[$LookupListName]
+            
+            if($LookupListName.StartsWith("SC.")) {
+                #$LN = $LookupListName.Replace("SC.", "")
+                $LookupList = $SCS.Lists[$LookupListName.Replace("SC.", "")]
+            } else { 
+                $LookupList = $NewSubSite.Lists[$LookupListName.Replace("SC.", "")]
+            }            
+            
             $LookupListId = "{" +$LookupList.ID + "}"
             $Field.SetAttribute("List", $LookupListId) 
         }

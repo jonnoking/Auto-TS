@@ -15,6 +15,19 @@
     <Image></Image>
     <Lists>
       <List>
+        <Name>Customer Tickets</Name>
+        <Description>Customer Tickets</Description>
+        <ListType>IssueTracking</ListType>
+        <CustomFields>
+          <Field Type="Text" DisplayName="Account" Required="FALSE" EnforceUniqueValues="FALSE" MaxLength="255" StaticName="Account" Name="Account" />
+          <Field Type="Text" DisplayName="Account ID" Required="FALSE" MaxLength="255" StaticName="Account ID" Name="Account ID" />
+          <Field Type='URL' DisplayName='View Flow' Format='Hyperlink' Name='View Flow' StaticName='View Flow' Required='False'/>
+          <Field Type='Text' DisplayName='Workflow Id' Required='FALSE' MaxLength='255' StaticName='Workflow Id' Name='Workflow Id'/>
+        </CustomFields>
+        <ListData>
+        </ListData>
+      </List>
+      <List>
         <Name>Region</Name>
         <Description>Regions</Description>
         <ListType>GenericList</ListType>
@@ -51,36 +64,40 @@
         <ListType>GenericList</ListType>
         <CustomFields>
           <Field Type='Note' DisplayName='Description' Required='FALSE' NumLines='6' RichText='FALSE' Sortable='FALSE' StaticName='Description' Name='Description' />
+          <Field Type="Currency" DisplayName="Unit Price" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Unit Price" Name="Unit Price" />
           <Field Type='Choice' DisplayName='Units' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Units' Name='Units'>
             <Default>Hours</Default>
-            <Choices>
-              <Choice>Hours</Choice>
-              <Choice>Per User</Choice>
-              <Choice>Server</Choice>
-            </Choices>
+          <CHOICES>
+            <CHOICE>Hours</CHOICE>
+            <CHOICE>Per User</CHOICE>
+            <CHOICE>Server</CHOICE>
+          </CHOICES>
           </Field>
-          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
         </CustomFields>
         <ListData>
           <Item>
-            <Field Property="Title">North America</Field>
-            <Field Property="Description">Sales in North America</Field>
-            <Field Property="Manager">james@denallix.com</Field>
+            <Field Property="Title">Denallix Finance Software</Field>
+            <Field Property="Description">Build finance apps</Field>
+            <Field Property="Unit Price">10000</Field>
+            <Field Property="Units">Server</Field>            
           </Item>
           <Item>
-            <Field Property="Title">APAC</Field>
-            <Field Property="Description">Sales in APAC</Field>
-            <Field Property="Manager">bob@denallix.com</Field>
+            <Field Property="Title">Denallix HR Software</Field>
+            <Field Property="Description">Create Human Resources apps</Field>
+            <Field Property="Unit Price">5000</Field>
+            <Field Property="Units">Server</Field>
           </Item>
           <Item>
-            <Field Property="Title">EMEA</Field>
-            <Field Property="Description">Sales in EMEA</Field>
-            <Field Property="Manager">holly@denallix.com</Field>
+            <Field Property="Title">Denallix Software Training</Field>
+            <Field Property="Description">Explore, discover and learn</Field>
+            <Field Property="Unit Price">5000</Field>
+            <Field Property="Units">Per User</Field>
           </Item>
           <Item>
-            <Field Property="Title">Europe</Field>
-            <Field Property="Description">Sales in Europe</Field>
-            <Field Property="Manager">barry@denallix.com</Field>
+            <Field Property="Title">Denallix Consulting Services</Field>
+            <Field Property="Description">First app live</Field>
+            <Field Property="Unit Price">150</Field>
+            <Field Property="Units">Hours</Field>
           </Item>
         </ListData>
       </List>
@@ -93,14 +110,16 @@
         <CustomFields>
           <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
             <Default>Software</Default>
-            <Choices>
-              <Choice>Software</Choice>
-              <Choice>Services</Choice>
-              <Choice>Training</Choice>
-            </Choices>
+          <CHOICES>
+            <CHOICE>Software</CHOICE>
+            <CHOICE>Services</CHOICE>
+            <CHOICE>Training</CHOICE>
+          </CHOICES>
           </Field>
           <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
-          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date'/>
+          <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
+          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date' StaticName="Expiration Date"/>
+          <Field Type='Lookup' DisplayName='Product' List='Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
           <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
         </CustomFields>
         <ListData>
@@ -111,8 +130,19 @@
         <Description>Sales Quotes</Description>
         <ListType>DocumentLibrary</ListType>
         <CustomFields>
-          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
-          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+          <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
+            <Default>Software</Default>
+            <CHOICES>
+              <CHOICE>Software</CHOICE>
+              <CHOICE>Services</CHOICE>
+              <CHOICE>Training</CHOICE>
+            </CHOICES>
+          </Field>
+          <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+          <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
+          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date'/>
+          <Field Type='Lookup' DisplayName='Product' List='Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
+          <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
         </CustomFields>
         <ListData>
         </ListData>
@@ -120,28 +150,53 @@
     </Libraries>
     <Sites>
       <Site>
-        <Name></Name>
-        <Description></Description>
-        <Template></Template>
-        <Language></Language>
+        <Name>Finance Portal</Name>
+        <Description>Finance Portal</Description>
+        <Template>STS#0</Template>
+        <Language>1033</Language>
         <Lists>
           <List>
-            <Name></Name>
-            <Description></Description>
-            <ListType></ListType>
+            <Name>Room Booking</Name>
+            <Description>Room Booking</Description>
+            <ListType>Events</ListType>
             <CustomFields>
-              <Field Type='Text' DisplayName='Region' Required='FALSE' MaxLength='255' StaticName='Region' Name='Region'/>
             </CustomFields>
             <ListData>
-              <Item>
-                <Field Property=""></Field>
-                <Field Property=""></Field>
-              </Item>
             </ListData>          
-        </List>
+          </List>
         </Lists>
         <Libraries>
-          <Library></Library>
+          <Library>
+            <Name>Vendor Approval</Name>
+            <Description>Vendor Approval</Description>
+            <ListType>DocumentLibrary</ListType>
+            <CustomFields>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </Library>
+          <Library>
+            <Name>Approved Quotes</Name>
+            <Description>Approved Quotes</Description>
+            <ListType>DocumentLibrary</ListType>
+            <CustomFields>
+              <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
+                <Default>Software</Default>
+                <CHOICES>
+                  <CHOICE>Software</CHOICE>
+                  <CHOICE>Services</CHOICE>
+                  <CHOICE>Training</CHOICE>
+                </CHOICES>
+              </Field>
+              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+              <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
+              <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date' StaticName="Expiration Date"/>
+              <Field Type='Lookup' DisplayName='Product' List='SC.Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
+              <Field Type='Lookup' DisplayName='Region' List='SC.Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </Library>
         </Libraries>
       </Site>
     </Sites>
