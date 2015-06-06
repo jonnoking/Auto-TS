@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Environment>
+  <Settings>
+    <User></User>
+    <UserPassword></UserPassword>
+    <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
+  </Settings>
+  <SiteCollection>
+    <Name>Jonno 2</Name>
+    <Description>Jonno 2</Description>
+    <Template>STS#0</Template>
+    <Owner>denallix\administrator</Owner>
+    <SecondaryOwner>denallix\k2webservice</SecondaryOwner>
+    <Language>1033</Language>
+    <Image></Image>
+    <Lists>
+      <List>
+        <Name>Region</Name>
+        <Description>Regions</Description>
+        <Type>GenericList</Type>
+        <CustomFields>
+          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
+          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+        </CustomFields>
+        <Data>
+          <Item>
+            <Field Property="Title">North America</Field>
+            <Field Property="Description">Sales in North America</Field>
+            <Field Property="Manager">james@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">APAC</Field>
+            <Field Property="Description">Sales in APAC</Field>
+            <Field Property="Manager">bob@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">EMEA</Field>
+            <Field Property="Description">Sales in EMEA</Field>
+            <Field Property="Manager">holly@denallix.com</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Europe</Field>
+            <Field Property="Description">Sales in Europe</Field>
+            <Field Property="Manager">barry@denallix.com</Field>
+          </Item>
+        </Data>
+      </List>
+    </Lists>
+    <Libraries>
+      <Library>
+        <Name>Draft Quotes</Name>
+        <Description>Draft Quotes</Description>
+        <ListType>[Microsoft.SharePoint.SPListTemplateType]::DocumentLibrary</ListType>
+        <CustomFields>
+          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
+          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+        </CustomFields>
+        <Data>
+        </Data>
+      </Library>
+      <Library>
+        <Name>Sales Quotes</Name>
+        <Description>Sales Quotes</Description>
+        <ListType>[Microsoft.SharePoint.SPListTemplateType]::DocumentLibrary</ListType>
+        <CustomFields>
+          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
+          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
+        </CustomFields>
+        <Data>
+        </Data>
+      </Library>
+    </Libraries>
+    <Sites>
+      <Site>
+        <Name></Name>
+        <Description></Description>
+        <Template></Template>
+        <Lists>
+          <List>
+            <Name></Name>
+            <Description></Description>
+            <ListType></ListType>
+            <CustomFields>
+              <Field Type='Text' DisplayName='Region' Required='FALSE' MaxLength='255' StaticName='Region' Name='Region'/>
+            </CustomFields>
+            <Data>
+              <Item>
+                <Field Property=""></Field>
+                <Field Property=""></Field>
+              </Item>
+            </Data>
+          </List>
+        </Lists>
+        <Libraries>
+          <Library></Library>
+        </Libraries>
+      </Site>
+    </Sites>
+  </SiteCollection>
+</Environment>
