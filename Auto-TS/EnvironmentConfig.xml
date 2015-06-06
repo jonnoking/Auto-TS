@@ -124,26 +124,6 @@
           <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
         </CustomFields>
         <ListData>
-          <Item>
-            <Field Property="File">C:\Resources\Samples\Edge Communications Contract.docx</Field>
-            <Field Property="Title">Edge Communications Contract</Field>
-            <Field Property="Category">Software</Field>
-            <Field Property="Account">Edge Communications</Field>
-            <Field Property="Amount">15000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
-            <Field Property="Product">1</Field>
-            <Field Property="Region">1</Field>
-          </Item>
-          <Item Folder="Contracts">
-            <Field Property="File">C:\Resources\Samples\Vendor Contract - Smith.docx</Field>
-            <Field Property="Title">Smith Contract Contract</Field>
-            <Field Property="Category">Software</Field>
-            <Field Property="Account">Smith</Field>
-            <Field Property="Amount">10000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
-            <Field Property="Product">2</Field>
-            <Field Property="Region">2</Field>
-          </Item>
         </ListData>
       </Library>
       <Library>

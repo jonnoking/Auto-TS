@@ -132,33 +132,13 @@ foreach($Library in $SCLibraries.Library) {
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
-        $spItem = $null
+        $spItem = $lib.AddItem()
 
         foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
-
-                # Assumes local file
-                $LibFile = $ItemField.InnerText
-                $File = Get-ChildItem $LibFile
-                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                $LibFolder = $SCS.GetFolder($Library.Name);
-
-                $LibFiles = $LibFolder.Files
-                
-                $spItem = $LibFiles.Add($Library.Name+"/"+$LibFileName, $File.OpenRead(),$false)
-                break
-            }
+            $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
         }
-
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-
-                $spItem.Item[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
-            }
-        }
-
-        $spItem.Item.Update()
+        
+        $spItem.Update()
     }
 
 }
