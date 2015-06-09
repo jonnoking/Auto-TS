@@ -31,8 +31,8 @@ $SPExists = (Get-SPSite $SCUrl -ErrorAction SilentlyContinue) -ne $null
 if ($SPExists)
 {
     Write-Host -ForegroundColor Red "Site Collection already exists"
-    Write-Host -ForegroundColor Red "SCRIPTED HAS STOPPED"
     Remove-SPSite -Identity $SCUrl -GradualDelete -Confirm:$false
+    Write-Host -ForegroundColor Red "SCRIPTED HAS STOPPED"
     return
 }
 
@@ -181,8 +181,10 @@ foreach($Site in $SCSites.Site) {
 
     # CUSTOMIZE SUB SITE - LISTS
     $SCLists = $Site.Lists
-    $lib.OnQuickLaunch = $true;
-    $lib.Update();
+
+    #$lib = $SCS.Lists[$Library.Name]
+    #$lib.OnQuickLaunch = $true;
+    #$lib.Update();
 
     foreach($Library in $SCLists.List) {    
 
@@ -277,7 +279,7 @@ foreach($Site in $SCSites.Site) {
                     $LibFolder = $NewSubSite.GetFolder($Library.Name);
 
                     $LibFiles = $LibFolder.Files
-                
+
                     $spItem = $LibFiles.Add($Library.Name+"/"+$LibFileName, $File.OpenRead(),$false)
                     break
                 }

@@ -2,8 +2,8 @@
 <Environment>
   <Settings>
     <TenantAdmin>jonno@k2loud.onmicrosoft.com</TenantAdmin>
-    <TenantAdminPassword>K2nkK2007</TenantAdminPassword>
-    <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
+    <TenantAdminPassword>K22nkK22007</TenantAdminPassword>
+    <SiteBaseUrl>https://k2loud.sharepoint.com</SiteBaseUrl>
     <SiteAdminUrl>https://k2loud-admin.sharepoint.com</SiteAdminUrl>
   </Settings>
   <SiteCollection>
@@ -132,7 +132,7 @@
             <Field Property="Category">Software</Field>
             <Field Property="Account">Edge Communications</Field>
             <Field Property="Amount">15000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
+            <Field Property="Expiration_x0020_Date0">2015-06-06</Field>
             <Field Property="Product">1</Field>
             <Field Property="Region">1</Field>
           </Item>
@@ -142,7 +142,7 @@
             <Field Property="Category">Software</Field>
             <Field Property="Account">Smith</Field>
             <Field Property="Amount">10000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
+            <Field Property="Expiration_x0020_Date0">2015-06-06</Field>
             <Field Property="Product">2</Field>
             <Field Property="Region">2</Field>
           </Item>
@@ -179,7 +179,7 @@
         <Template>STS#0</Template>
         <Language>1033</Language>
         <Lists>
-          <List>
+          <List QuickLaunch="False">
             <Name>Region</Name>
             <Description>Regions</Description>
             <ListType>GenericList</ListType>
@@ -210,7 +210,7 @@
               </Item>
             </ListData>
           </List>
-          <List>
+          <List QuickLaunch="False">
             <Name>Products</Name>
             <Description>Products</Description>
             <ListType>GenericList</ListType>
@@ -252,8 +252,8 @@
                 <Field Property="Units">Hours</Field>
               </Item>
             </ListData>
-          </List>
-          <List>
+          </List>          
+          <List QuickLaunch="True">
             <Name>Room Booking</Name>
             <Description>Room Booking</Description>
             <ListType>Events</ListType>
@@ -263,15 +263,15 @@
               <Item>
                 <Field Property="Title">Team Dinner</Field>
                 <Field Property="Location">Some Bar</Field>
-                <Field Property="Start Time">2015-06-08 14:00</Field>
-                <Field Property="End Time">2015-06-08 15:00</Field>
+                <Field Property="EventDate">2015-06-08 14:00</Field>
+                <Field Property="EndDate">2015-06-08 15:00</Field>
                 <Field Property="Description">Some team dinner</Field>
               </Item>
             </ListData>
           </List>
         </Lists>
         <Libraries>
-          <Library>
+          <Library QuickLaunch="True">
             <Name>Vendor Approval</Name>
             <Description>Vendor Approval</Description>
             <ListType>DocumentLibrary</ListType>
@@ -306,7 +306,7 @@
                 <Field Property="Category">Software</Field>
                 <Field Property="Account">Edge Communications</Field>
                 <Field Property="Amount">15000</Field>
-                <Field Property="Expiration Date">2015-06-06</Field>
+                <Field Property="Expiration_x0020_Date0">2015-06-06</Field>
                 <Field Property="Product">1</Field>
                 <Field Property="Region">2</Field>
               </Item>
@@ -377,270 +377,4 @@
       </Site>
     </Sites>
   </SiteCollection>
-
-  <!--<SiteCollection>
-    <Name>Jonno 2</Name>
-    <UrlName>Jonno2</UrlName>
-    <Description>Jonno 2</Description>
-    <Template>STS#0</Template>
-    <Owner>denallix\administrator</Owner>
-    <SecondaryOwner>denallix\k2webservice</SecondaryOwner>
-    <Language>1033</Language>
-    <Quota>100</Quota>
-    <Image></Image>
-    <Lists>
-      <List>
-        <Name>Customer Tickets</Name>
-        <Description>Customer Tickets</Description>
-        <ListType>IssueTracking</ListType>
-        <CustomFields>
-          <Field Type="Text" DisplayName="Account" Required="FALSE" EnforceUniqueValues="FALSE" MaxLength="255" StaticName="Account" Name="Account" />
-          <Field Type="Text" DisplayName="Account ID" Required="FALSE" MaxLength="255" StaticName="Account ID" Name="Account ID" />
-          <Field Type='URL' DisplayName='View Flow' Format='Hyperlink' Name='View Flow' StaticName='View Flow' Required='False'/>
-          <Field Type='Text' DisplayName='Workflow Id' Required='FALSE' MaxLength='255' StaticName='Workflow Id' Name='Workflow Id'/>
-        </CustomFields>
-        <ListData>
-        </ListData>
-      </List>
-      <List>
-        <Name>Region</Name>
-        <Description>Regions</Description>
-        <ListType>GenericList</ListType>
-        <CustomFields>
-          <Field Type='Text' DisplayName='Description' Required='FALSE' MaxLength='255' StaticName='Description' Name='Description'/>
-          <Field Type='Text' DisplayName='Manager' Required='FALSE' MaxLength='255' StaticName='Manager' Name='Manager'/>
-        </CustomFields>
-        <ListData>
-          <Item>
-            <Field Property="Title">North America</Field>
-            <Field Property="Description">Sales in North America</Field>
-            <Field Property="Manager">james@denallix.com</Field>
-          </Item>
-          <Item>
-            <Field Property="Title">APAC</Field>
-            <Field Property="Description">Sales in APAC</Field>
-            <Field Property="Manager">bob@denallix.com</Field>
-          </Item>
-          <Item>
-            <Field Property="Title">EMEA</Field>
-            <Field Property="Description">Sales in EMEA</Field>
-            <Field Property="Manager">holly@denallix.com</Field>
-          </Item>
-          <Item>
-            <Field Property="Title">Europe</Field>
-            <Field Property="Description">Sales in Europe</Field>
-            <Field Property="Manager">barry@denallix.com</Field>
-          </Item>
-        </ListData>      
-    </List>
-      <List>
-        <Name>Products</Name>
-        <Description>Products</Description>
-        <ListType>GenericList</ListType>
-        <CustomFields>
-          <Field Type='Note' DisplayName='Description' Required='FALSE' NumLines='6' RichText='FALSE' Sortable='FALSE' StaticName='Description' Name='Description' />
-          <Field Type="Currency" DisplayName="Unit Price" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Unit Price" Name="Unit Price" />
-          <Field Type='Choice' DisplayName='Units' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Units' Name='Units'>
-            <Default>Hours</Default>
-          <CHOICES>
-            <CHOICE>Hours</CHOICE>
-            <CHOICE>Per User</CHOICE>
-            <CHOICE>Server</CHOICE>
-          </CHOICES>
-          </Field>
-        </CustomFields>
-        <ListData>
-          <Item>
-            <Field Property="Title">Denallix Finance Software</Field>
-            <Field Property="Description">Build finance apps</Field>
-            <Field Property="Unit Price">10000</Field>
-            <Field Property="Units">Server</Field>            
-          </Item>
-          <Item>
-            <Field Property="Title">Denallix HR Software</Field>
-            <Field Property="Description">Create Human Resources apps</Field>
-            <Field Property="Unit Price">5000</Field>
-            <Field Property="Units">Server</Field>
-          </Item>
-          <Item>
-            <Field Property="Title">Denallix Software Training</Field>
-            <Field Property="Description">Explore, discover and learn</Field>
-            <Field Property="Unit Price">5000</Field>
-            <Field Property="Units">Per User</Field>
-          </Item>
-          <Item>
-            <Field Property="Title">Denallix Consulting Services</Field>
-            <Field Property="Description">First app live</Field>
-            <Field Property="Unit Price">150</Field>
-            <Field Property="Units">Hours</Field>
-          </Item>
-        </ListData>
-      </List>
-    </Lists>
-    <Libraries>
-      <Library>
-        <Name>Draft Quotes</Name>
-        <Description>Draft Quotes</Description>
-        <ListType>DocumentLibrary</ListType>
-        <CustomFields>
-          <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
-            <Default>Software</Default>
-          <CHOICES>
-            <CHOICE>Software</CHOICE>
-            <CHOICE>Services</CHOICE>
-            <CHOICE>Training</CHOICE>
-          </CHOICES>
-          </Field>
-          <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
-          <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
-          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date' StaticName="Expiration Date"/>
-          <Field Type='Lookup' DisplayName='Product' List='Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
-          <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
-        </CustomFields>
-        <ListData>
-          <Item>
-            <Field Property="File">C:\Resources\Samples\Edge Communications Contract.docx</Field>
-            <Field Property="Title">Edge Communications Contract</Field>
-            <Field Property="Category">Software</Field>
-            <Field Property="Account">Edge Communications</Field>
-            <Field Property="Amount">15000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
-            <Field Property="Product">1</Field>
-            <Field Property="Region">1</Field>
-          </Item>
-          <Item Folder="Contracts">
-            <Field Property="File">C:\Resources\Samples\Vendor Contract - Smith.docx</Field>
-            <Field Property="Title">Smith Contract Contract</Field>
-            <Field Property="Category">Software</Field>
-            <Field Property="Account">Smith</Field>
-            <Field Property="Amount">10000</Field>
-            <Field Property="Expiration Date">2015-06-06</Field>
-            <Field Property="Product">2</Field>
-            <Field Property="Region">2</Field>
-          </Item>
-        </ListData>
-      </Library>
-      <Library>
-        <Name>Sales Quotes</Name>
-        <Description>Sales Quotes</Description>
-        <ListType>DocumentLibrary</ListType>
-        <CustomFields>
-          <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
-            <Default>Software</Default>
-            <CHOICES>
-              <CHOICE>Software</CHOICE>
-              <CHOICE>Services</CHOICE>
-              <CHOICE>Training</CHOICE>
-            </CHOICES>
-          </Field>
-          <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
-          <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
-          <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date'/>
-          <Field Type='Lookup' DisplayName='Product' List='Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
-          <Field Type='Lookup' DisplayName='Region' List='Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
-        </CustomFields>
-        <ListData>
-        </ListData>
-      </Library>
-    </Libraries>
-    <Sites>
-      <Site>
-        <Name>Finance Portal</Name>
-        <UrlName>Finance</UrlName>
-        <Description>Finance Portal</Description>
-        <Template>STS#0</Template>
-        <Language>1033</Language>
-        <Lists>
-          <List>
-            <Name>Room Booking</Name>
-            <Description>Room Booking</Description>
-            <ListType>Events</ListType>
-            <CustomFields>
-            </CustomFields>
-            <ListData>
-            </ListData>          
-          </List>
-        </Lists>
-        <Libraries>
-          <Library>
-            <Name>Vendor Approval</Name>
-            <Description>Vendor Approval</Description>
-            <ListType>DocumentLibrary</ListType>
-            <CustomFields>
-            </CustomFields>
-            <ListData>
-            </ListData>
-          </Library>
-          <Library>
-            <Name>Approved Quotes</Name>
-            <Description>Approved Quotes</Description>
-            <ListType>DocumentLibrary</ListType>
-            <CustomFields>
-              <Field Type='Choice' DisplayName='Category' Required='FALSE' Format='Dropdown' FillInChoice='FALSE' StaticName='Category' Name='Category'>
-                <Default>Software</Default>
-                <CHOICES>
-                  <CHOICE>Software</CHOICE>
-                  <CHOICE>Services</CHOICE>
-                  <CHOICE>Training</CHOICE>
-                </CHOICES>
-              </Field>
-              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
-              <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
-              <Field Type='DateTime' DisplayName='Expiration Date' Format='DateOnly' Name='Expiration Date' StaticName="Expiration Date"/>
-              <Field Type='Lookup' DisplayName='Product' List='SC.Products' ShowField='Title' RelationshipDeleteBehavior='None' Name='Product'/>
-              <Field Type='Lookup' DisplayName='Region' List='SC.Region' ShowField='Title' RelationshipDeleteBehavior='None' Name='Region'/>
-            </CustomFields>
-            <ListData>
-            </ListData>
-          </Library>
-        </Libraries>
-      </Site>
-      <Site>
-        <Name>Customer Portal</Name>
-        <UrlName>Customer</UrlName>
-        <Description>Customer Portal</Description>
-        <Template>STS#0</Template>
-        <Language>1033</Language>
-        <Lists>
-        </Lists>
-        <Libraries>
-          <Library>
-            <Name>Contracts</Name>
-            <Description>Contracts</Description>
-            <ListType>DocumentLibrary</ListType>
-            <CustomFields>
-              <Field Type='User' DisplayName='Account Manager' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Account Manager' StaticName="Account Manager"/>
-              <Field Type='DateTime' DisplayName='Renewed On' Format='DateOnly' Name='Renewed On' StaticName="Renewed On"/>
-              <Field Type='DateTime' DisplayName='Expires On' Format='DateOnly' Name='Expires On' StaticName="Expires On"/>
-              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
-            </CustomFields>
-            <ListData>
-            </ListData>
-          </Library>
-        </Libraries>
-      </Site>
-      <Site>
-        <Name>Employee Portal</Name>
-        <UrlName>Employee</UrlName>
-        <Description>Employee Portal</Description>
-        <Template>STS#0</Template>
-        <Language>1033</Language>
-        <Lists>
-          <List>
-            <Name>Support Engineers</Name>
-            <Description>Support Engineers</Description>
-            <ListType>GenericList</ListType>
-            <CustomFields>
-              <Field Type='User' DisplayName='Engineer' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Engineer' StaticName="Engineer"/>
-              <Field Type='Text' DisplayName='Support Category' Required='FALSE' MaxLength='255' StaticName='Support Category' Name='Support Category'/>
-            </CustomFields>
-            <ListData>
-            </ListData>
-          </List>
-        </Lists>
-        <Libraries>
-        </Libraries>
-      </Site>
-    </Sites>
-  </SiteCollection>-->
 </Environment>
