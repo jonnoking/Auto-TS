@@ -322,6 +322,13 @@ foreach($Library in $SCLibraries.Library) {
     }
 
 }
+    # MODIFY THE SITE LOGO
+    #Get the short file name of the first item in the document library "Assets"
+    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Libraries/Library[Name='Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+    $FileName = $LongFileName.Substring($LongFileName.LastIndexOf("\")+1) 
+    $Context.Web.SiteLogoUrl = "/sites/" + $SCUrlName + "/Assets/" + $FileName
+    $Context.Web.Update();
+    $Context.ExecuteQuery();
 
 
     # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS

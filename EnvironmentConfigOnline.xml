@@ -106,6 +106,17 @@
       </List>
     </Lists>
     <Libraries>
+		<Library>
+				<Name>Assets</Name>
+				<Description>Stores Site-collection wide assets</Description>
+				<ListType>DocumentLibrary</ListType>
+				<ListData>
+					<Item>
+						<Field Property="File">C:\Development\Auto-TS\Files\belkar.png</Field>
+						<Field Property="Title">Site Collection Logo</Field>
+					</Item>
+				</ListData>
+			</Library>
       <Library>
         <Name>Draft Quotes</Name>
         <Description>Draft Quotes</Description>
