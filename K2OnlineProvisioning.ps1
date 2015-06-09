@@ -10,7 +10,8 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
-#Import-Module SPOMod
+
+
 
 
 # Load Config
@@ -72,15 +73,19 @@ if ($SPExists -ne $null -and $SPExists)
 
 # CREATE SITE COLLECTION
 # THIS HAS A HABIT OF FAILING. IF IT FAILS THE REST OF THE SCIRPT RUNS BUT NOTHING WORKS. NEEDS BETTER EXCEPTION HANDLING (EVERYWHERE)
-New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
+try {
+
+    New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
+
+} catch {
+
+    Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
+    return
+    
+}
 
 # get site collection
 $SC = Get-SPOSite $SCUrl -Detailed
-
-if ($SC -eq $null) {
-Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
-    return
-}
 
 
 # Add Everyone to Members group
@@ -227,6 +232,8 @@ foreach($Library in $SCLibraries.Library) {
         foreach($ItemField in $ItemData.Field) {
             if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
 
+
+
                 # Assumes local file
                 $LibFile = $ItemField.InnerText
                 $File = Get-ChildItem $LibFile
@@ -237,7 +244,58 @@ foreach($Library in $SCLibraries.Library) {
                 $FileCreationInfo.Overwrite = $true
                 $FileCreationInfo.ContentStream = $FileStream
                 $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
-                $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+
+
+
+
+                $Folder = $ItemData.GetAttribute("Folder")
+
+                $Fldr = $null
+                $DSL = $null
+                if ($Folder -ne $null -and $Folder -ne "") {
+                    
+                    # Check if DocSet exists
+
+                    try {
+                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+
+                    } catch {
+                        # Doc Set not found
+
+                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                        $Context.Load($DocSet)
+                        $Context.ExecuteQuery()
+
+                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                        $Fldr.LeafName = $Folder
+
+                        $DSItem = $List.AddItem($Fldr)
+                        $DSItem["ContentTypeId"] = $DocSet.Id
+                        $DSItem["Title"] = $Folder
+                        $DSItem.Update()
+                        $Context.Load($List)
+                        $Context.ExecuteQuery()
+
+                        $DSL = $Context.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+                        
+                    }
+
+                    $Upload = $DSL.Files.Add($FileCreationInfo)                    
+                  
+
+                } else {
+
+                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+
+
+                }
 
                 
                 $UploadItem = $Upload.ListItemAllFields;
@@ -253,6 +311,11 @@ foreach($Library in $SCLibraries.Library) {
                 $UploadItem.Update()
                 $Context.Load($Upload)
                 $Context.ExecuteQuery()
+                
+
+
+                $FileStream.Dispose()
+
                 break;
             }
         }                
@@ -471,8 +534,58 @@ foreach($Site in $SCSites.Site) {
                 $FileCreationInfo.Overwrite = $true
                 $FileCreationInfo.ContentStream = $FileStream
                 $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
-                $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+                
+                #$Upload = $List.RootFolder.Files.Add($FileCreationInfo)
 
+                $Folder = $ItemData.GetAttribute("Folder")
+
+                $Fldr = $null
+                $DSL = $null
+                if ($Folder -ne $null -and $Folder -ne "") {
+                    
+                    # Check if DocSet exists
+
+                    try {
+                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+
+                    } catch {
+                        # Doc Set not found
+
+                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                        $Context.Load($DocSet)
+                        $Context.ExecuteQuery()
+
+                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                        $Fldr.LeafName = $Folder
+
+                        $DSItem = $List.AddItem($Fldr)
+                        $DSItem["ContentTypeId"] = $DocSet.Id
+                        $DSItem["Title"] = $Folder
+                        $DSItem.Update()
+                        $Context.Load($List)
+                        $Context.ExecuteQuery()
+
+                        $DSL = $Context.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+                        
+                    }
+
+                    $Upload = $DSL.Files.Add($FileCreationInfo)      
+                    
+                  
+
+                } else {
+
+                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+
+
+                }
                 
                 $UploadItem = $Upload.ListItemAllFields;
 
@@ -487,6 +600,9 @@ foreach($Site in $SCSites.Site) {
                 $UploadItem.Update()
                 $Context.Load($Upload)
                 $Context.ExecuteQuery()
+
+                $FileStream.Dispose()
+
                 break;
             }
         }                
@@ -528,6 +644,8 @@ foreach($Site in $SCSites.Site) {
 
 }
 
+
+$Context.Dispose()
 
 
 

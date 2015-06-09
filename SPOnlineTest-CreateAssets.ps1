@@ -1,4 +1,46 @@
-﻿Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
+﻿
+function Get-ScriptDirectory
+{
+    $Invocation = (Get-Variable MyInvocation -Scope 1).Value;
+    if($Invocation.PSScriptRoot)
+    {
+        $Invocation.PSScriptRoot;
+    }
+    Elseif($Invocation.MyCommand.Path)
+    {
+        Split-Path $Invocation.MyCommand.Path
+    }
+    else
+    {
+        $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf("\"));
+    }
+}
+
+function Log-ToFile($msg) {
+    $cwd = Get-ScriptDirectory
+    $d = Get-Date
+    $logfile = $cwd + "\logfile.log"
+
+    $t = $d.ToString("yyyy-MM-dd HH:mm:ss") + " " + $msg
+
+    Add-Content $logfile $t
+    Write-Host -ForegroundColor Green $t
+
+}
+
+Log-ToFile("hey hey")
+return
+
+
+$csom = "." + $cmd + "\CSOMFunctions.ps1"
+. $csom
+
+
+
+#Write-Host $invocation
+return
+
+Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 $user = "jonno@k2loud.onmicrosoft.com"
 $userpwd = "K2nkK2007"
