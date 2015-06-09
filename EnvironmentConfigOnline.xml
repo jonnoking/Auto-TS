@@ -104,19 +104,34 @@
           </Item>
         </ListData>
       </List>
+      <List>
+        <Name>Support Engineers</Name>
+        <Description>Support Engineers</Description>
+        <ListType>GenericList</ListType>
+        <CustomFields>
+          <Field Type='User' DisplayName='Engineer' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Engineer' StaticName="Engineer"/>
+          <Field Type='Text' DisplayName='Support Category' Required='FALSE' MaxLength='255' StaticName='Support Category' Name='Support Category'/>
+        </CustomFields>
+        <ListData>
+          <Item>
+            <Field Property="Title">Senior Software Support Engineer</Field>
+            <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
+            <Field Property="Support Category">Software</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Senior Network Engineer</Field>
+            <Field Property="Engineer" Type="User">Jonathan King</Field>
+            <Field Property="Support Category">Network</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Junior Hardware Engineer</Field>
+            <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
+            <Field Property="Support Category">Hardware</Field>
+          </Item>
+        </ListData>
+      </List>      
     </Lists>
     <Libraries>
-		<Library>
-				<Name>Assets</Name>
-				<Description>Stores Site-collection wide assets</Description>
-				<ListType>DocumentLibrary</ListType>
-				<ListData>
-					<Item>
-						<Field Property="File">C:\Development\Auto-TS\Files\belkar.png</Field>
-						<Field Property="Title">Site Collection Logo</Field>
-					</Item>
-				</ListData>
-			</Library>
       <Library>
         <Name>Draft Quotes</Name>
         <Description>Draft Quotes</Description>
@@ -182,6 +197,19 @@
         </ListData>
       </Library>
     </Libraries>
+    <Existing>
+        <Libraries>
+            <Library>
+				      <Name>Site Assets</Name>
+              <ListData>
+					      <Item>
+						      <Field Property="File">C:\Development\Auto-TS\Files\K2-mashup-SP.png</Field>
+						      <Field Property="Title">K2 Appit Site Collection Logo</Field>
+					    </Item>
+				    </ListData>
+			    </Library>
+        </Libraries>
+    </Existing>
     <Sites>
       <Site>
         <Name>Finance Portal</Name>
@@ -377,17 +405,17 @@
             <ListData>
               <Item>
                 <Field Property="Title">Senior Software Support Engineer</Field>
-                <Field Property="Engineer">1</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Software</Field>
               </Item>
               <Item>
                 <Field Property="Title">Senior Network Engineer</Field>
-                <Field Property="Engineer">1</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Network</Field>
               </Item>
               <Item>
                 <Field Property="Title">Junior Hardware Engineer</Field>
-                <Field Property="Engineer">1</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Hardware</Field>
               </Item>
             </ListData>

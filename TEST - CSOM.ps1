@@ -79,7 +79,7 @@ $Context.Credentials = $Creds
     $Context.ExecuteQuery()
     Write-Host $OutputUserObject.Id
 
-    return 
+    #return 
 
 
 
@@ -107,19 +107,44 @@ $List = $SupportList
 Write-Host -ForegroundColor Red $SupportListData.OuterXml
 
 
-    # Add List Data    
     $ListData = $SupportListData
-    foreach($ItemData in $ListData.Item) {
+        foreach($ItemData in $ListData.Item) {
+            
+            $listvalues = @{}
 
-        $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-        $Item = $List.AddItem($ListItemInfo)
-        
-        foreach($ItemField in $ItemData.Field) {
-            $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $ItemField.InnerText
+                foreach($ItemField in $ItemData.Field) {
+                    $FieldValue = $ItemField.InnerText                
+
+                    $FieldType = $ItemField.GetAttribute("Type")
+            
+                    if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                        #Assumes you've put in a valid email
+                        $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                        $Context.Load($OutputUserObject)
+                        $Context.ExecuteQuery()
+                        Write-Host "User Id: "  $OutputUserObject.Id
+                        $FieldValue = $OutputUserObject.Id
+
+                        #$FieldValue = 9
+                    }
+
+                   $listvalues.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)
+
+                }                
+
+                Write-Output $listvalues
+
+            $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+            $Item = $List.AddItem($ListItemInfo)
+
+
+            $listvalues.GetEnumerator() | % {
+                $Item[$_.Key] = $_.Value
+            }
+
+                        $Item.Update()
+            $Context.ExecuteQuery()
+
         }
-
-        $Item.Update()
-        $Context.ExecuteQuery()
-
-    }
 

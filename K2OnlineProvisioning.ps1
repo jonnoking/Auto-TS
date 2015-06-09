@@ -12,8 +12,6 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 
-
-
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
 
@@ -154,7 +152,23 @@ foreach($Library in $SCLists.List) {
         $Item = $List.AddItem($ListItemInfo)
         
         foreach($ItemField in $ItemData.Field) {
-            $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $ItemField.InnerText
+            
+            $FieldValue = $ItemField.InnerText
+
+            $FieldType = $ItemField.GetAttribute("Type")
+            
+            if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                #Assumes you've put in a valid email
+                $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                $Context.Load($OutputUserObject)
+                $Context.ExecuteQuery()
+                Write-Host "User Id: " + $OutputUserObject.Id
+                $FieldValue = $OutputUserObject.Id
+            }
+
+
+            $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
         }
 
         $Item.Update()
@@ -280,7 +294,7 @@ foreach($Library in $SCLibraries.Library) {
                         $Context.Load($List)
                         $Context.ExecuteQuery()
 
-                        $DSL = $Context.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
                         $Context.Load($DSL)
                         $Context.ExecuteQuery()
 
@@ -305,7 +319,22 @@ foreach($Library in $SCLibraries.Library) {
                 foreach($ItemField in $ItemData.Field) {
                     if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
 
-                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $ItemField.InnerText
+                        $FieldValue = $ItemField.InnerText
+
+                        $FieldType = $ItemField.GetAttribute("Type")
+            
+                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                            #Assumes you've put in a valid email
+                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                            $Context.Load($OutputUserObject)
+                            $Context.ExecuteQuery()
+                            Write-Host "User Id: " + $OutputUserObject.Id
+                            $FieldValue = $OutputUserObject.Id
+                        }
+
+
+                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
                     }
                 }
                 $UploadItem.Update()
@@ -322,11 +351,147 @@ foreach($Library in $SCLibraries.Library) {
     }
 
 }
+
+
+# ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Existing/Libraries")
+
+foreach($Library in $SCLibraries.Library) {    
+
+    $List = $null
+    try {
+        $List = $Context.Web.Lists.GetByTitle($Library.Name)
+        $Context.Load($List)
+        $Context.ExecuteQuery()
+    } catch {
+        Write-Host -ForegroundColor Red "Specified existing library doesn't exist"
+        break
+    }
+
+    # Add List Data    
+    $ListData = $Library.ListData
+    foreach($ItemData in $ListData.Item) {
+
+    # Upload File
+    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
+        $Upload = $null
+        
+        foreach($ItemField in $ItemData.Field) {
+            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
+
+
+
+                # Assumes local file
+                $LibFile = $ItemField.InnerText
+                $File = Get-ChildItem $LibFile
+                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+                $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
+                $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
+                $FileCreationInfo.Overwrite = $true
+                $FileCreationInfo.ContentStream = $FileStream
+                $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
+
+
+                $Folder = $ItemData.GetAttribute("Folder")
+
+                $Fldr = $null
+                $DSL = $null
+                if ($Folder -ne $null -and $Folder -ne "") {
+                    
+                    # Check if DocSet exists
+
+                    try {
+                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+
+                    } catch {
+                        # Doc Set not found
+
+                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                        $Context.Load($DocSet)
+                        $Context.ExecuteQuery()
+
+                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                        $Fldr.LeafName = $Folder
+
+                        $DSItem = $List.AddItem($Fldr)
+                        $DSItem["ContentTypeId"] = $DocSet.Id
+                        $DSItem["Title"] = $Folder
+                        $DSItem.Update()
+                        $Context.Load($List)
+                        $Context.ExecuteQuery()
+
+                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $Context.Load($DSL)
+                        $Context.ExecuteQuery()
+
+                        
+                    }
+
+                    $Upload = $DSL.Files.Add($FileCreationInfo)                    
+                  
+
+                } else {
+
+                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+
+
+                }
+
+                
+                $UploadItem = $Upload.ListItemAllFields;
+
+                #$Context.ExecuteQuery()
+
+                foreach($ItemField in $ItemData.Field) {
+                    if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+                        $FieldValue = $ItemField.InnerText
+
+                        $FieldType = $ItemField.GetAttribute("Type")
+            
+                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                            #Assumes you've put in a valid email
+                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                            $Context.Load($OutputUserObject)
+                            $Context.ExecuteQuery()
+                            Write-Host "User Id: " + $OutputUserObject.Id
+                            $FieldValue = $OutputUserObject.Id
+                        }
+
+
+                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
+                    }
+                }
+                $UploadItem.Update()
+                $Context.Load($Upload)
+                $Context.ExecuteQuery()
+                
+
+
+                $FileStream.Dispose()
+
+                break;
+            }
+        }                
+    }
+}
+
+
+
+
+
+
+
     # MODIFY THE SITE LOGO
-    #Get the short file name of the first item in the document library "Assets"
-    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Libraries/Library[Name='Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+    #Get the short file name of the first item in the existing document library "Site Assets"
+    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
     $FileName = $LongFileName.Substring($LongFileName.LastIndexOf("\")+1) 
-    $Context.Web.SiteLogoUrl = "/sites/" + $SCUrlName + "/Assets/" + $FileName
+    $Context.Web.SiteLogoUrl = "/sites/" + $SCUrlName + "/SiteAssets/" + $FileName
     $Context.Web.Update();
     $Context.ExecuteQuery();
 
@@ -356,6 +521,10 @@ foreach($Library in $SCLibraries.Library) {
     if ($QLDocs -ne $null) { $QLDocs.DeleteObject() }
 
     $Context.ExecuteQuery()
+
+
+
+
 
 
 
@@ -444,7 +613,22 @@ foreach($Site in $SCSites.Site) {
             $Item = $List.AddItem($ListItemInfo)
         
             foreach($ItemField in $ItemData.Field) {
-                $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $ItemField.InnerText
+                $FieldValue = $ItemField.InnerText                
+
+                $FieldType = $ItemField.GetAttribute("Type")
+            
+                if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                    #Assumes you've put in a valid email
+                    $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                    $Context.Load($OutputUserObject)
+                    $Context.ExecuteQuery()
+                    Write-Host "User Id: " + $OutputUserObject.Id
+                    $FieldValue = $OutputUserObject.Id
+                }
+
+
+                $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
             }
 
             $Item.Update()
@@ -553,7 +737,8 @@ foreach($Site in $SCSites.Site) {
                     # Check if DocSet exists
 
                     try {
-                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                    
+                        $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
                         $Context.Load($DSL)
                         $Context.ExecuteQuery()
 
@@ -576,7 +761,7 @@ foreach($Site in $SCSites.Site) {
                         $Context.Load($List)
                         $Context.ExecuteQuery()
 
-                        $DSL = $Context.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                        $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
                         $Context.Load($DSL)
                         $Context.ExecuteQuery()
 
@@ -601,7 +786,22 @@ foreach($Site in $SCSites.Site) {
                 foreach($ItemField in $ItemData.Field) {
                     if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
 
-                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $ItemField.InnerText
+                        $FieldValue = $ItemField.InnerText
+
+                        $FieldType = $ItemField.GetAttribute("Type")
+            
+                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                            #Assumes you've put in a valid email
+                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                            $Context.Load($OutputUserObject)
+                            $Context.ExecuteQuery()
+                            Write-Host "User Id: " + $OutputUserObject.Id
+                            $FieldValue = $OutputUserObject.Id
+                        }
+
+
+                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
                     }
                 }
                 $UploadItem.Update()

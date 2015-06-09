@@ -15,7 +15,9 @@ Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
-
+    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+Write-Host -ForegroundColor Green $LongFileName
+break
 
 # Get Base Settings
 $BaseUrl = $config.Environment.Settings.SiteBaseUrl
@@ -82,10 +84,13 @@ Write-Host -ForegroundColor Green $FinanceSite.Url
 
 
 # GET LIST - WORKS
-$QuotesList = $FinanceSite.Lists.GetByTitle("Approved Quotes")
+$QuotesList = $FinanceSite.Lists.GetByTitle("Site Assets")
 $Context.Load($QuotesList)
 $Context.ExecuteQuery()
 
+$l = 0
+
+#return
 
 $LKJ = $FinanceSite.GetFolderByServerRelativeUrl("Approved Quotes/JJK")
 $Context.Load($LKJ)
@@ -93,12 +98,11 @@ $Context.ExecuteQuery()
 
 Write-Host -for Green $LKJ.Name
 
-$l = 0
 
 
 
-$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Sites/Site[1]/Libraries/Library[2]/ListData")
-
+#$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Sites/Site[1]/Libraries/Library[2]/ListData")
+$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[1]/ListData")
 $List = $QuotesList
 
 Write-Host -ForegroundColor Red $QuotesListData.OuterXml
