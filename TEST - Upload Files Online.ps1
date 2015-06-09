@@ -15,9 +15,9 @@ Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
-    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+   # $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
 Write-Host -ForegroundColor Green $LongFileName
-break
+
 
 # Get Base Settings
 $BaseUrl = $config.Environment.Settings.SiteBaseUrl
@@ -84,7 +84,8 @@ Write-Host -ForegroundColor Green $FinanceSite.Url
 
 
 # GET LIST - WORKS
-$QuotesList = $FinanceSite.Lists.GetByTitle("Site Assets")
+#$QuotesList = $FinanceSite.Lists.GetByTitle("Approved Quotes")
+$QuotesList = $Context.Web.Lists.GetByTitle("Sales Quotes")
 $Context.Load($QuotesList)
 $Context.ExecuteQuery()
 
@@ -101,11 +102,144 @@ Write-Host -for Green $LKJ.Name
 
 
 
-#$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Sites/Site[1]/Libraries/Library[2]/ListData")
-$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[1]/ListData")
+$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Libraries/Library[1]/ListData")
+#$QuotesListData = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[1]/ListData")
 $List = $QuotesList
 
 Write-Host -ForegroundColor Red $QuotesListData.OuterXml
+
+$ListData = $QuotesListData
+    foreach($ItemData in $ListData.Item) {
+
+    # Upload File
+    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
+        $Upload = $null
+        
+        ## get file node
+        ## check if a folder is required
+        ## create folder if it doesn't exist
+        ## create file stream
+        ## upload file
+        ## get file items
+        ## create values hash
+        ## update fields
+
+        $ItemFieldFile = $ItemData.SelectSingleNode("Field[@Property='File']")
+
+        $Folder = $ItemData.GetAttribute("Folder")
+
+        $Fldr = $null
+        $DSL = $null
+        if ($Folder -ne $null -and $Folder -ne "") {
+                    
+            # Check if DocSet exists
+
+            try {
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
+
+
+            } catch {
+                # Doc Set not found
+
+                $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                $Context.Load($DocSet)
+                $Context.ExecuteQuery()
+
+                $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                $Fldr.LeafName = $Folder
+
+                $DSItem = $List.AddItem($Fldr)
+                $DSItem["ContentTypeId"] = $DocSet.Id
+                $DSItem["Title"] = $Folder
+                $DSItem.Update()
+                $Context.Load($List)
+                $Context.ExecuteQuery()
+
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
+
+                        
+            }
+        }
+
+        # Assumes local file
+        $LibFile = $ItemFieldFile.InnerText
+        $File = Get-ChildItem $LibFile
+        $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+        $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
+        $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
+        $FileCreationInfo.Overwrite = $true
+        $FileCreationInfo.ContentStream = $FileStream
+        $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+
+
+        if ($Folder -ne $null -and $Folder -ne "") {
+            $Upload = $DSL.Files.Add($FileCreationInfo)                    
+        } else { 
+            $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+        }
+
+        $UploadItem = $Upload.ListItemAllFields;
+
+
+
+        $ListValuesHash = @{}
+
+        # Populate values into hash - avoids reseting $Item issue
+        foreach($ItemField in $ItemData.Field) {
+            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+                $FieldValue = $ItemField.InnerText
+
+                $FieldType = $ItemField.GetAttribute("Type")
+            
+                if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                    #Assumes you've put in a valid email
+                    $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                    $Context.Load($OutputUserObject)
+                    $Context.ExecuteQuery()
+                    $FieldValue = $OutputUserObject.Id
+                }
+
+                $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+            }
+        }
+
+        $ListValuesHash.GetEnumerator() | % {
+            $UploadItem[$_.Key] = $_.Value
+        }
+
+        $UploadItem.Update()
+        $Context.Load($Upload)
+        $Context.ExecuteQuery()
+
+        $FileStream.Dispose()
+    }
+
+
+
+    return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # Add List Data    
     $ListData = $QuotesListData

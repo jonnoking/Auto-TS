@@ -161,6 +161,7 @@
             <Field Property="Expiration_x0020_Date0">2015-06-06</Field>
             <Field Property="Product">1</Field>
             <Field Property="Region">1</Field>
+            <!--<Field Property="Reviewer" Type="User">jonathan king</Field>-->
           </Item>
           <Item Folder="Contracts">
             <Field Property="File">C:\Development\Auto-TS\Files\Vendor Contract - Smith.docx</Field>
@@ -171,6 +172,7 @@
             <Field Property="Expiration_x0020_Date0">2015-06-06</Field>
             <Field Property="Product">2</Field>
             <Field Property="Region">2</Field>
+            <!--<Field Property="Reviewer" Type="User">jonno@k2loud.onmicrosoft.com</Field>-->
           </Item>
         </ListData>
       </Library>

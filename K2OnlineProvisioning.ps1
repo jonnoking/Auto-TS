@@ -148,9 +148,9 @@ foreach($Library in $SCLists.List) {
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
-        $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-        $Item = $List.AddItem($ListItemInfo)
-        
+        $ListValuesHash = @{}
+
+        # Populate values into hash - avoids reseting $Item issue
         foreach($ItemField in $ItemData.Field) {
             
             $FieldValue = $ItemField.InnerText
@@ -163,12 +163,18 @@ foreach($Library in $SCLists.List) {
                 $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
                 $Context.Load($OutputUserObject)
                 $Context.ExecuteQuery()
-                Write-Host "User Id: " + $OutputUserObject.Id
                 $FieldValue = $OutputUserObject.Id
             }
 
+            $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+        }
 
-            $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
+        # Create new item
+        $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+        $Item = $List.AddItem($ListItemInfo)
+
+        $ListValuesHash.GetEnumerator() | % {
+            $Item[$_.Key] = $_.Value
         }
 
         $Item.Update()
@@ -239,117 +245,105 @@ foreach($Library in $SCLibraries.Library) {
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
-    # Upload File
-    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
+        # Upload File
         $Upload = $null
         
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
+        $ItemFieldFile = $ItemData.SelectSingleNode("Field[@Property='File']")
 
+        $Folder = $ItemData.GetAttribute("Folder")
 
-
-                # Assumes local file
-                $LibFile = $ItemField.InnerText
-                $File = Get-ChildItem $LibFile
-                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
-                $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
-                $FileCreationInfo.Overwrite = $true
-                $FileCreationInfo.ContentStream = $FileStream
-                $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
-
-
-
-
-                $Folder = $ItemData.GetAttribute("Folder")
-
-                $Fldr = $null
-                $DSL = $null
-                if ($Folder -ne $null -and $Folder -ne "") {
+        $Fldr = $null
+        $DSL = $null
+        if ($Folder -ne $null -and $Folder -ne "") {
                     
-                    # Check if DocSet exists
+            # Check if DocSet exists
 
-                    try {
-                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
+            try {
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
 
 
-                    } catch {
-                        # Doc Set not found
+            } catch {
+                # Doc Set not found
 
-                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
-                        $Context.Load($DocSet)
-                        $Context.ExecuteQuery()
+                $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                $Context.Load($DocSet)
+                $Context.ExecuteQuery()
 
-                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
-                        $Fldr.LeafName = $Folder
+                $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                $Fldr.LeafName = $Folder
 
-                        $DSItem = $List.AddItem($Fldr)
-                        $DSItem["ContentTypeId"] = $DocSet.Id
-                        $DSItem["Title"] = $Folder
-                        $DSItem.Update()
-                        $Context.Load($List)
-                        $Context.ExecuteQuery()
+                $DSItem = $List.AddItem($Fldr)
+                $DSItem["ContentTypeId"] = $DocSet.Id
+                $DSItem["Title"] = $Folder
+                $DSItem.Update()
+                $Context.Load($List)
+                $Context.ExecuteQuery()
 
-                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
 
                         
-                    }
-
-                    $Upload = $DSL.Files.Add($FileCreationInfo)                    
-                  
-
-                } else {
-
-                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
-
-
-                }
-
-                
-                $UploadItem = $Upload.ListItemAllFields;
-
-                #$Context.ExecuteQuery()
-
-                foreach($ItemField in $ItemData.Field) {
-                    if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-
-                        $FieldValue = $ItemField.InnerText
-
-                        $FieldType = $ItemField.GetAttribute("Type")
-            
-                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
-                
-                            #Assumes you've put in a valid email
-                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                            $Context.Load($OutputUserObject)
-                            $Context.ExecuteQuery()
-                            Write-Host "User Id: " + $OutputUserObject.Id
-                            $FieldValue = $OutputUserObject.Id
-                        }
-
-
-                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
-                    }
-                }
-                $UploadItem.Update()
-                $Context.Load($Upload)
-                $Context.ExecuteQuery()
-                
-
-
-                $FileStream.Dispose()
-
-                break;
             }
-        }                
-    }
+        }
 
+        # Assumes local file
+        $LibFile = $ItemFieldFile.InnerText
+        $File = Get-ChildItem $LibFile
+        $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+        $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
+        $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
+        $FileCreationInfo.Overwrite = $true
+        $FileCreationInfo.ContentStream = $FileStream
+        $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+
+
+        if ($Folder -ne $null -and $Folder -ne "") {
+            $Upload = $DSL.Files.Add($FileCreationInfo)                    
+        } else { 
+            $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+        }
+
+        $UploadItem = $Upload.ListItemAllFields;
+
+
+
+        $ListValuesHash = @{}
+
+        # Populate values into hash - avoids reseting $Item issue
+        foreach($ItemField in $ItemData.Field) {
+            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+                $FieldValue = $ItemField.InnerText
+
+                $FieldType = $ItemField.GetAttribute("Type")
+            
+                if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                    #Assumes you've put in a valid email
+                    $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                    $Context.Load($OutputUserObject)
+                    $Context.ExecuteQuery()
+                    $FieldValue = $OutputUserObject.Id
+                }
+
+                $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+            }
+        }
+
+        $ListValuesHash.GetEnumerator() | % {
+            $UploadItem[$_.Key] = $_.Value
+        }
+
+        $UploadItem.Update()
+        $Context.Load($Upload)
+        $Context.ExecuteQuery()
+
+        $FileStream.Dispose()
+    }
 }
 
 
@@ -372,112 +366,104 @@ foreach($Library in $SCLibraries.Library) {
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
-    # Upload File
-    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
+        # Upload File
         $Upload = $null
         
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
+        $ItemFieldFile = $ItemData.SelectSingleNode("Field[@Property='File']")
 
+        $Folder = $ItemData.GetAttribute("Folder")
 
-
-                # Assumes local file
-                $LibFile = $ItemField.InnerText
-                $File = Get-ChildItem $LibFile
-                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
-                $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
-                $FileCreationInfo.Overwrite = $true
-                $FileCreationInfo.ContentStream = $FileStream
-                $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
-
-
-                $Folder = $ItemData.GetAttribute("Folder")
-
-                $Fldr = $null
-                $DSL = $null
-                if ($Folder -ne $null -and $Folder -ne "") {
+        $Fldr = $null
+        $DSL = $null
+        if ($Folder -ne $null -and $Folder -ne "") {
                     
-                    # Check if DocSet exists
+            # Check if DocSet exists
 
-                    try {
-                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
+            try {
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
 
 
-                    } catch {
-                        # Doc Set not found
+            } catch {
+                # Doc Set not found
 
-                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
-                        $Context.Load($DocSet)
-                        $Context.ExecuteQuery()
+                $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                $Context.Load($DocSet)
+                $Context.ExecuteQuery()
 
-                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
-                        $Fldr.LeafName = $Folder
+                $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                $Fldr.LeafName = $Folder
 
-                        $DSItem = $List.AddItem($Fldr)
-                        $DSItem["ContentTypeId"] = $DocSet.Id
-                        $DSItem["Title"] = $Folder
-                        $DSItem.Update()
-                        $Context.Load($List)
-                        $Context.ExecuteQuery()
+                $DSItem = $List.AddItem($Fldr)
+                $DSItem["ContentTypeId"] = $DocSet.Id
+                $DSItem["Title"] = $Folder
+                $DSItem.Update()
+                $Context.Load($List)
+                $Context.ExecuteQuery()
 
-                        $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
+                $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
 
                         
-                    }
-
-                    $Upload = $DSL.Files.Add($FileCreationInfo)                    
-                  
-
-                } else {
-
-                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
-
-
-                }
-
-                
-                $UploadItem = $Upload.ListItemAllFields;
-
-                #$Context.ExecuteQuery()
-
-                foreach($ItemField in $ItemData.Field) {
-                    if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-                        $FieldValue = $ItemField.InnerText
-
-                        $FieldType = $ItemField.GetAttribute("Type")
-            
-                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
-                
-                            #Assumes you've put in a valid email
-                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                            $Context.Load($OutputUserObject)
-                            $Context.ExecuteQuery()
-                            Write-Host "User Id: " + $OutputUserObject.Id
-                            $FieldValue = $OutputUserObject.Id
-                        }
-
-
-                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
-                    }
-                }
-                $UploadItem.Update()
-                $Context.Load($Upload)
-                $Context.ExecuteQuery()
-                
-
-
-                $FileStream.Dispose()
-
-                break;
             }
-        }                
+        }
+
+        # Assumes local file
+        $LibFile = $ItemFieldFile.InnerText
+        $File = Get-ChildItem $LibFile
+        $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+        $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
+        $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
+        $FileCreationInfo.Overwrite = $true
+        $FileCreationInfo.ContentStream = $FileStream
+        $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+
+
+        if ($Folder -ne $null -and $Folder -ne "") {
+            $Upload = $DSL.Files.Add($FileCreationInfo)                    
+        } else { 
+            $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+        }
+
+        $UploadItem = $Upload.ListItemAllFields;
+
+
+
+        $ListValuesHash = @{}
+
+        # Populate values into hash - avoids reseting $Item issue
+        foreach($ItemField in $ItemData.Field) {
+            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+                $FieldValue = $ItemField.InnerText
+
+                $FieldType = $ItemField.GetAttribute("Type")
+            
+                if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                    #Assumes you've put in a valid email
+                    $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                    $Context.Load($OutputUserObject)
+                    $Context.ExecuteQuery()
+                    $FieldValue = $OutputUserObject.Id
+                }
+
+                $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+            }
+        }
+
+        $ListValuesHash.GetEnumerator() | % {
+            $UploadItem[$_.Key] = $_.Value
+        }
+
+        $UploadItem.Update()
+        $Context.Load($Upload)
+        $Context.ExecuteQuery()
+
+        $FileStream.Dispose()
     }
 }
 
@@ -609,11 +595,12 @@ foreach($Site in $SCSites.Site) {
         $ListData = $Library.ListData
         foreach($ItemData in $ListData.Item) {
 
-            $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-            $Item = $List.AddItem($ListItemInfo)
-        
+            $ListValuesHash = @{}
+
+            # Populate values into hash - avoids reseting $Item issue
             foreach($ItemField in $ItemData.Field) {
-                $FieldValue = $ItemField.InnerText                
+            
+                $FieldValue = $ItemField.InnerText
 
                 $FieldType = $ItemField.GetAttribute("Type")
             
@@ -623,16 +610,22 @@ foreach($Site in $SCSites.Site) {
                     $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
                     $Context.Load($OutputUserObject)
                     $Context.ExecuteQuery()
-                    Write-Host "User Id: " + $OutputUserObject.Id
                     $FieldValue = $OutputUserObject.Id
                 }
 
+                $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+            }
 
-                $Item[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
+            # Create new item
+            $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+            $Item = $List.AddItem($ListItemInfo)
+
+            $ListValuesHash.GetEnumerator() | % {
+                $Item[$_.Key] = $_.Value
             }
 
             $Item.Update()
-            $Context.ExecuteQuery()
+            $Context.ExecuteQuery()            
 
         }
 
@@ -704,118 +697,109 @@ foreach($Site in $SCSites.Site) {
     }
 
 
+
     # Add List Data    
     $ListData = $Library.ListData
     foreach($ItemData in $ListData.Item) {
 
-    # Upload File
-    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
+        # Upload File
         $Upload = $null
         
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
+        $ItemFieldFile = $ItemData.SelectSingleNode("Field[@Property='File']")
 
-                # Assumes local file
-                $LibFile = $ItemField.InnerText
-                $File = Get-ChildItem $LibFile
-                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
-                $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
-                $FileCreationInfo.Overwrite = $true
-                $FileCreationInfo.ContentStream = $FileStream
-                $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1)                 
-                
-                #$Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+        $Folder = $ItemData.GetAttribute("Folder")
 
-                $Folder = $ItemData.GetAttribute("Folder")
-
-                $Fldr = $null
-                $DSL = $null
-                if ($Folder -ne $null -and $Folder -ne "") {
+        $Fldr = $null
+        $DSL = $null
+        if ($Folder -ne $null -and $Folder -ne "") {
                     
-                    # Check if DocSet exists
+            # Check if DocSet exists
 
-                    try {
-                    
-                        $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
-
-
-                    } catch {
-                        # Doc Set not found
-
-                        $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
-                        $Context.Load($DocSet)
-                        $Context.ExecuteQuery()
-
-                        $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-                        $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
-                        $Fldr.LeafName = $Folder
-
-                        $DSItem = $List.AddItem($Fldr)
-                        $DSItem["ContentTypeId"] = $DocSet.Id
-                        $DSItem["Title"] = $Folder
-                        $DSItem.Update()
-                        $Context.Load($List)
-                        $Context.ExecuteQuery()
-
-                        $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
-                        $Context.Load($DSL)
-                        $Context.ExecuteQuery()
-
-                        
-                    }
-
-                    $Upload = $DSL.Files.Add($FileCreationInfo)      
-                    
-                  
-
-                } else {
-
-                    $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
-
-
-                }
-                
-                $UploadItem = $Upload.ListItemAllFields;
-
-                #$Context.ExecuteQuery()
-
-                foreach($ItemField in $ItemData.Field) {
-                    if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-
-                        $FieldValue = $ItemField.InnerText
-
-                        $FieldType = $ItemField.GetAttribute("Type")
-            
-                        if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
-                
-                            #Assumes you've put in a valid email
-                            $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                            $Context.Load($OutputUserObject)
-                            $Context.ExecuteQuery()
-                            Write-Host "User Id: " + $OutputUserObject.Id
-                            $FieldValue = $OutputUserObject.Id
-                        }
-
-
-                        $UploadItem[$ItemField.GetAttribute("Property").Replace(" ", "_x0020_")] = $FieldValue
-                    }
-                }
-                $UploadItem.Update()
-                $Context.Load($Upload)
+            try {
+                $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
                 $Context.ExecuteQuery()
 
-                $FileStream.Dispose()
 
-                break;
+            } catch {
+                # Doc Set not found
+
+                $DocSet = $Context.Web.ContentTypes.GetById("0x0120D520")
+                $Context.Load($DocSet)
+                $Context.ExecuteQuery()
+
+                $Fldr = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
+                $Fldr.UnderlyingObjectType = 1  # 1 = Folder - FileSystemObjectType enumeration
+                $Fldr.LeafName = $Folder
+
+                $DSItem = $List.AddItem($Fldr)
+                $DSItem["ContentTypeId"] = $DocSet.Id
+                $DSItem["Title"] = $Folder
+                $DSItem.Update()
+                $Context.Load($List)
+                $Context.ExecuteQuery()
+
+                $DSL = $NewSubSite.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                $Context.Load($DSL)
+                $Context.ExecuteQuery()
+
+                        
             }
-        }                
+        }
+
+        # Assumes local file
+        $LibFile = $ItemFieldFile.InnerText
+        $File = Get-ChildItem $LibFile
+        $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+                
+        $FileStream = New-Object IO.FileStream($File, [System.IO.FileMode]::Open)
+        $FileCreationInfo = New-Object Microsoft.SharePoint.Client.FileCreationInformation
+        $FileCreationInfo.Overwrite = $true
+        $FileCreationInfo.ContentStream = $FileStream
+        $FileCreationInfo.URL = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
+
+
+        if ($Folder -ne $null -and $Folder -ne "") {
+            $Upload = $DSL.Files.Add($FileCreationInfo)                    
+        } else { 
+            $Upload = $List.RootFolder.Files.Add($FileCreationInfo)
+        }
+
+        $UploadItem = $Upload.ListItemAllFields;
+
+
+        $ListValuesHash = @{}
+
+        # Populate values into hash - avoids reseting $Item issue
+        foreach($ItemField in $ItemData.Field) {
+            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
+                $FieldValue = $ItemField.InnerText
+
+                $FieldType = $ItemField.GetAttribute("Type")
+            
+                if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
+                
+                    #Assumes you've put in a valid email
+                    $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
+                    $Context.Load($OutputUserObject)
+                    $Context.ExecuteQuery()
+                    $FieldValue = $OutputUserObject.Id
+                }
+
+                $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
+            }
+        }
+
+        $ListValuesHash.GetEnumerator() | % {
+            $UploadItem[$_.Key] = $_.Value
+        }
+
+        $UploadItem.Update()
+        $Context.Load($Upload)
+        $Context.ExecuteQuery()
+
+        $FileStream.Dispose()
     }
-
-
 }
 
     # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL SUBSITE ASSETS
