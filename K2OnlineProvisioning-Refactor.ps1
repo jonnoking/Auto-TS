@@ -32,6 +32,7 @@ function Get-K2EnsureUser
             $Context.Load($OutputUserObject)
             $Context.ExecuteQuery()
             
+            Write-Output $OutputUserObject
 
         } catch {
             
@@ -39,12 +40,11 @@ function Get-K2EnsureUser
         
         }
 
-        Write-Output $OutputUserObject
 
 }
 
 
-function New-K2SPOList {
+function New-K2SPList {
 
     [CmdletBinding()]
 
@@ -81,7 +81,7 @@ function New-K2SPOList {
             
                     $LookupListName = $Field.GetAttribute("List");
 
-                    $LookupList = Get-K2SPOList -SPWeb $SPWeb -ListName $Library.Name
+                    $LookupList = Get-K2SPList -SPWeb $SPWeb -ListName $Library.Name
                     if($LookupList -ne $null) {
                         $LookupListId = "{" +$LookupList.Id + "}"
                         $Field.SetAttribute("List", $LookupListId) 
@@ -92,11 +92,13 @@ function New-K2SPOList {
                 $List.Fields.AddFieldAsXml($regionCol ,$true,[Microsoft.SharePoint.Client.AddFieldOptions]::AddFieldToDefaultView)
                 $List.Update()
                 $Context.ExecuteQuery()
-
+                
             }
 
-        } catch {
+            Write-Output $List
 
+        } catch {
+            return $null
         }
 
     }
@@ -150,6 +152,8 @@ function Add-K2DataToList {
 
         }
 
+        #Write-Output $List
+
     }
 
 }
@@ -186,7 +190,7 @@ function Add-K2DocumentsToLibrary {
                 # Check if DocSet exists
 
                 try {
-                    $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                    $DSL = $SPWeb.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
                     $Context.Load($DSL)
                     $Context.ExecuteQuery()
 
@@ -251,9 +255,7 @@ function Add-K2DocumentsToLibrary {
                     if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
                 
                         #Assumes you've put in a valid email
-                        $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                        $Context.Load($OutputUserObject)
-                        $Context.ExecuteQuery()
+                        $OutputUserObject = Get-K2EnsureUser -UserNameEmail $FieldValue
                         $FieldValue = $OutputUserObject.Id
                     }
 
@@ -271,6 +273,8 @@ function Add-K2DocumentsToLibrary {
 
             $FileStream.Dispose()
         }
+
+        #Write-Output $List
     }
 
 }
@@ -279,8 +283,6 @@ function Add-K2DocumentsToLibrary {
 function New-K2EnableDocumentType {
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
-		$SPWeb,
         [Parameter(Mandatory=$true,Position=1)]
 		$List
     )
@@ -299,11 +301,13 @@ function New-K2EnableDocumentType {
         $Context.Load($ctReturn)
         $Context.ExecuteQuery()
 
+        Write-Output $List
+
     }
 
 }
 
-function Get-K2SPOList {
+function Get-K2SPList {
     [CmdletBinding()]
 
     param(
@@ -320,10 +324,10 @@ function Get-K2SPOList {
             $LookupList =$SPWeb.Lists.GetByTitle($ListName)
             $Context.Load($LookupList)
             $Context.ExecuteQuery()
+            Write-Output $LookupList
         } catch {
             return $null
         }
-        Write-Output $LookupList
     }
 }
 
@@ -431,6 +435,7 @@ function New-K2CreateSite {
             $Context.Load($collQuickLaunchNode)
             $Context.ExecuteQuery()
 
+            Write-Output $NewSubSite
     }
 
 }
@@ -530,10 +535,13 @@ $SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
 
 foreach($Library in $SCLists.List) {    
 
-	$List = New-K2SPOList -SPWeb $Context.Web -Library $Library
+	New-K2SPList -SPWeb $Context.Web -Library $Library
 
-    $List = Add-K2DataToList -SPWeb $Context.Web -Library $Library -List $List
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
 
+    Add-K2DataToList -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
 }
 
 
@@ -542,11 +550,15 @@ $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
 
 foreach($Library in $SCLibraries.Library) {    
 
-   	$List = New-K2SPOList -SPWeb $Context.Web -Library $Library
+   	New-K2SPList -SPWeb $Context.Web -Library $Library
+ 
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
 
-	New-K2EnableDocumentType -SPWeb $Context.Web -List $List
+	New-K2EnableDocumentType -List $List
 
-	$List = Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
 
 }
 
@@ -558,7 +570,7 @@ foreach($Library in $SCLibraries.Library) {
 
     $List = $null
 	
-	$List = Get-K2SPOList -SPWeb $Context.Web -ListName $Library
+	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library
 
 	if ($List-eq $null) {
         Write-Host -ForegroundColor Red "Specified existing library doesn't exist"
@@ -566,6 +578,8 @@ foreach($Library in $SCLibraries.Library) {
 	}
 
 	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
 }
 
     # MODIFY THE SITE LOGO
@@ -588,10 +602,13 @@ foreach($Site in $SCSites.Site) {
     $SCLists = $Site.Lists
     foreach($Library in $SCLists.List) {    
 	
-		$List = New-K2SPOList -SPWeb $NewSubSite -Library $Library
+		New-K2SPList -SPWeb $NewSubSite -Library $Library
 
-		$List = Add-K2DataToList -SPWeb $NewSubSite -Library $Library -List $List
-	
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
+
+		Add-K2DataToList -SPWeb $NewSubSite -Library $Library -List $List
+        
+        $List = $null	
     }
 
 
@@ -599,11 +616,15 @@ foreach($Site in $SCSites.Site) {
     $SCLibraries = $Site.Libraries
     foreach($Library in $SCLibraries.Library) {    
 
-   		$List = New-K2SPOList -SPWeb $NewSubSite -Library $Library
+   		New-K2SPList -SPWeb $NewSubSite -Library $Library
+
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
 
 		New-K2EnableDocumentType -SPWeb $NewSubSite -List $List
 
-		$List = Add-K2DocumentsToLibrary -SPWeb $NewSubSite -Library $Library -List $List
+		Add-K2DocumentsToLibrary -SPWeb $NewSubSite -Library $Library -List $List
+
+        $List = $null	
 
     }
 
