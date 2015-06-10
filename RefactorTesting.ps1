@@ -10,9 +10,11 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
+#Import-Module SPOMod
 
-# ADD CSOM FUNCTIONS
 . .\Development\Auto-TS\CSOMFunctions.ps1
+
+
 
 
 # Load Config
@@ -42,6 +44,8 @@ $SCLanguage = $config.Environment.SiteCollection.Language
 $SCQuota = $config.Environment.SiteCollection.Quota
 
 
+
+
 $AdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $TenantAdmin, $TenantAdminPwdSecure
 Connect-SPOService -Url https://k2loud-admin.sharepoint.com/ -Credential $AdminCreds
 
@@ -61,120 +65,16 @@ if ($SPExists -ne $null -and $SPExists)
 {
     Write-Host -ForegroundColor Red "Site Collection already exists"
 
-    Remove-SPOSite $SCUrl -Confirm:$false
-    Remove-SPODeletedSite -Identity $SCUrl -Confirm:$false
-    Write-Host -ForegroundColor Red "Site Collection deleted"
-
-    return 
-
 } else {
    Write-Host -ForegroundColor Red "Site Collection doesn't exist"
+    return 
 }
-
-
-# CREATE SITE COLLECTION
-# THIS HAS A HABIT OF FAILING. IF IT FAILS THE REST OF THE SCIRPT RUNS BUT NOTHING WORKS. NEEDS BETTER EXCEPTION HANDLING (EVERYWHERE)
-try {
-
-    New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
-
-} catch {
-
-    Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
-    return
-    
-}
-
-# get site collection
-$SC = Get-SPOSite $SCUrl -Detailed
-
-
-# Add Everyone to Members group
-$SCGroupMembers = $SCName + " Members"
-Add-SPOUser -Site $SC -Group $SCGroupMembers -LoginName "C:0(.s|true"
 
 Disconnect-SPOService
 
-Write-Host -ForegroundColor Green "Site Collection Created"
-
-
-$Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
+[Microsoft.SharePoint.Client.ClientContext]$Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
 $Creds = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials($TenantAdmin, $TenantAdminPwdSecure)
 $Context.Credentials = $Creds
-
-
-# CREATE TOP LEVEL SITE LISTS
-$SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
-foreach($Library in $SCLists.List) {    
-
-    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
-
-    if ($List -ne $null) {
-        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
-        continue
-    }
-
-	New-K2SPList -SPWeb $Context.Web -Library $Library
-
-    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
-
-    Add-K2DataToList -SPWeb $Context.Web -Library $Library -List $List
-
-    $List = $null
-}
-
-
-# CREATE TOP LEVEL SITE LIBRARIES
-$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
-
-foreach($Library in $SCLibraries.Library) {    
-
-    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
-    
-    if ($List -ne $null) {
-        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
-        continue
-    }
-
-   	New-K2SPList -SPWeb $Context.Web -Library $Library
- 
-    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
-
-	New-K2EnableDocumentType -List $List
-
-	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
-
-    $List = $null
-}
-
-
-# ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
-$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Existing/Libraries")
-
-foreach($Library in $SCLibraries.Library) {    
-
-	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
-
-	if ($List-eq $null) {
-        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
-        continue
-	}
-
-	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
-
-    $List = $null
-}
-
-
-# MODIFY THE SITE LOGO
-$LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
-Set-K2SPSiteLogo -LongFileName $LongFileName
-
-
-# REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
-Set-K2TrimMenu -SPWeb $Context.Web
-
-
 
 
 # CUSTOMIZE SITE - SITES
@@ -245,3 +145,80 @@ foreach($Site in $SCSites.Site) {
 
 
 $Context.Dispose()
+
+return
+
+
+
+# ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Existing/Libraries")
+
+foreach($Library in $SCLibraries.Library) {    
+
+	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+
+	if ($List-eq $null) {
+        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
+        continue
+	}
+
+	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
+}
+
+    # MODIFY THE SITE LOGO
+    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+	Set-K2SPSiteLogo -LongFileName $LongFileName
+
+    # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
+	Set-K2TrimMenu -SPWeb $Context.Web
+
+
+
+# CUSTOMIZE PARENT SITE - LIBRARIES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
+
+foreach($Library in $SCLibraries.Library) {    
+
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+    
+    if ($List -ne $null) {
+        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+        continue
+    }
+
+   	New-K2SPList -SPWeb $Context.Web -Library $Library
+ 
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+
+	New-K2EnableDocumentType -List $List
+
+	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
+}
+
+
+
+$SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
+
+foreach($Library in $SCLists.List) {    
+
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+
+    if ($List -ne $null) {
+        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+        continue
+    }
+
+	New-K2SPList -SPWeb $Context.Web -Library $Library
+
+    $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+
+    Add-K2DataToList -SPWeb $Context.Web -Library $Library -List $List
+
+    $List = $null
+}
+
+

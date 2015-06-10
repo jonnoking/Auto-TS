@@ -14,6 +14,10 @@ Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 
 
+
+# RESUABLE FUNCTIONS
+
+
 function Get-K2EnsureUser
 {
   
@@ -28,6 +32,7 @@ function Get-K2EnsureUser
             $Context.Load($OutputUserObject)
             $Context.ExecuteQuery()
             
+            Write-Output $OutputUserObject
 
         } catch {
             
@@ -35,12 +40,11 @@ function Get-K2EnsureUser
         
         }
 
-        Write-Output $OutputUserObject
 
 }
 
 
-function New-K2SPOList {
+function New-K2SPList {
 
     [CmdletBinding()]
 
@@ -77,7 +81,7 @@ function New-K2SPOList {
             
                     $LookupListName = $Field.GetAttribute("List");
 
-                    $LookupList = Get-K2SPOList -SPWeb $SPWeb -ListName $Library.Name
+                    $LookupList = Get-K2SPList -SPWeb $SPWeb -ListName $Library.Name
                     if($LookupList -ne $null) {
                         $LookupListId = "{" +$LookupList.Id + "}"
                         $Field.SetAttribute("List", $LookupListId) 
@@ -88,11 +92,13 @@ function New-K2SPOList {
                 $List.Fields.AddFieldAsXml($regionCol ,$true,[Microsoft.SharePoint.Client.AddFieldOptions]::AddFieldToDefaultView)
                 $List.Update()
                 $Context.ExecuteQuery()
-
+                
             }
 
-        } catch {
+            Write-Output $List
 
+        } catch {
+            return $null
         }
 
     }
@@ -146,6 +152,8 @@ function Add-K2DataToList {
 
         }
 
+        #Write-Output $List
+
     }
 
 }
@@ -182,7 +190,7 @@ function Add-K2DocumentsToLibrary {
                 # Check if DocSet exists
 
                 try {
-                    $DSL = $Context.Web.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
+                    $DSL = $SPWeb.GetFolderByServerRelativeUrl($List.Title+"/"+$Folder)
                     $Context.Load($DSL)
                     $Context.ExecuteQuery()
 
@@ -247,9 +255,7 @@ function Add-K2DocumentsToLibrary {
                     if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
                 
                         #Assumes you've put in a valid email
-                        $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                        $Context.Load($OutputUserObject)
-                        $Context.ExecuteQuery()
+                        $OutputUserObject = Get-K2EnsureUser -UserNameEmail $FieldValue
                         $FieldValue = $OutputUserObject.Id
                     }
 
@@ -267,6 +273,8 @@ function Add-K2DocumentsToLibrary {
 
             $FileStream.Dispose()
         }
+
+        #Write-Output $List
     }
 
 }
@@ -275,8 +283,6 @@ function Add-K2DocumentsToLibrary {
 function New-K2EnableDocumentType {
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
-		$SPWeb,
         [Parameter(Mandatory=$true,Position=1)]
 		$List
     )
@@ -295,11 +301,13 @@ function New-K2EnableDocumentType {
         $Context.Load($ctReturn)
         $Context.ExecuteQuery()
 
+        Write-Output $List
+
     }
 
 }
 
-function Get-K2SPOList {
+function Get-K2SPList {
     [CmdletBinding()]
 
     param(
@@ -316,10 +324,10 @@ function Get-K2SPOList {
             $LookupList =$SPWeb.Lists.GetByTitle($ListName)
             $Context.Load($LookupList)
             $Context.ExecuteQuery()
+            Write-Output $LookupList
         } catch {
             return $null
         }
-        Write-Output $LookupList
     }
 }
 
@@ -386,7 +394,7 @@ function Set-K2TrimMenu {
 }
 
 
-function Set-K2CreateSite {
+function New-K2CreateSite {
     [CmdletBinding()]
 
     param(
@@ -427,9 +435,13 @@ function Set-K2CreateSite {
             $Context.Load($collQuickLaunchNode)
             $Context.ExecuteQuery()
 
+            Write-Output $NewSubSite
     }
 
 }
+
+
+
 
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
@@ -508,6 +520,8 @@ $Context.Credentials = $Creds
 $EmployeeSite = $Context.Site.OpenWeb("Finance")
 $Context.Load($EmployeeSite)
 $Context.ExecuteQuery()
+
+
 
 [System.Xml.XmlElement]$EmpList = $config.SelectSingleNode("/Environment/SiteCollection/Lists/List[4]")
 
