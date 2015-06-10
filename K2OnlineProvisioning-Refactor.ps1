@@ -10,8 +10,12 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
-#Import-Module SPOMod
 
+
+
+
+
+# RESUABLE FUNCTIONS
 
 
 function Get-K2EnsureUser
@@ -386,7 +390,7 @@ function Set-K2TrimMenu {
 }
 
 
-function Set-K2CreateSite {
+function New-K2CreateSite {
     [CmdletBinding()]
 
     param(
@@ -431,6 +435,8 @@ function Set-K2CreateSite {
 
 }
 
+
+
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
 
@@ -458,8 +464,6 @@ $SCLanguage = $config.Environment.SiteCollection.Language
 $SCQuota = $config.Environment.SiteCollection.Quota
 
 
-
-
 $AdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $TenantAdmin, $TenantAdminPwdSecure
 Connect-SPOService -Url https://k2loud-admin.sharepoint.com/ -Credential $AdminCreds
 
@@ -479,114 +483,140 @@ if ($SPExists -ne $null -and $SPExists)
 {
     Write-Host -ForegroundColor Red "Site Collection already exists"
 
+    Remove-SPOSite $SCUrl -Confirm:$false
+    Remove-SPODeletedSite -Identity $SCUrl -Confirm:$false
+    Write-Host -ForegroundColor Red "Site Collection deleted"
+
+    return 
+
 } else {
    Write-Host -ForegroundColor Red "Site Collection doesn't exist"
-    return 
 }
+
+
+# CREATE SITE COLLECTION
+# THIS HAS A HABIT OF FAILING. IF IT FAILS THE REST OF THE SCIRPT RUNS BUT NOTHING WORKS. NEEDS BETTER EXCEPTION HANDLING (EVERYWHERE)
+try {
+
+    New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
+
+} catch {
+
+    Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
+    return
+    
+}
+
+# get site collection
+$SC = Get-SPOSite $SCUrl -Detailed
+
+
+# Add Everyone to Members group
+$SCGroupMembers = $SCName + " Members"
+Add-SPOUser -Site $SC -Group $SCGroupMembers -LoginName "C:0(.s|true"
 
 Disconnect-SPOService
 
-[Microsoft.SharePoint.Client.ClientContext]$Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
+Write-Host -ForegroundColor Green "Site Collection Created"
+
+
+$Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
 $Creds = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials($TenantAdmin, $TenantAdminPwdSecure)
 $Context.Credentials = $Creds
 
 
-#GET USER
+# CUSTOMIZE PARENT SITE - LISTS
+$SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
 
-    #$OutputUserObject = $Context.Web.EnsureUser("jonno@k2loud.onmicrosoft.com")
-    #$Context.Load($OutputUserObject)
-    #$Context.ExecuteQuery()
-    #Write-Host $OutputUserObject.Id
+foreach($Library in $SCLists.List) {    
 
+	$List = New-K2SPOList -SPWeb $Context.Web -Library $Library
 
-    #$User = Get-K2EnsureUser("jonathan king")
+    $List = Add-K2DataToList -SPWeb $Context.Web -Library $Library -List $List
 
-    $User.Id
-    #return
-
-# GET WEB - WORKS
-$EmployeeSite = $Context.Site.OpenWeb("Finance")
-$Context.Load($EmployeeSite)
-$Context.ExecuteQuery()
-
-[System.Xml.XmlElement]$EmpList = $config.SelectSingleNode("/Environment/SiteCollection/Lists/List[4]")
-
-#Write-Host $EmpList.GetType().FullName
-
-$BList = Get-K2SPOList -SPWeb $EmployeeSite -ListName "Vendor Approval"
-Write-Host $BList.Title
-
-[Microsoft.SharePoint.Client.List]$NewList = New-K2SPOList -Library $EmpList -SPWeb $EmployeeSite
-
-Write-Host $NewList.Title
+}
 
 
+# CUSTOMIZE PARENT SITE - LIBRARIES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
 
-return
+foreach($Library in $SCLibraries.Library) {    
 
+   	$List = New-K2SPOList -SPWeb $Context.Web -Library $Library
 
-# GET WEB - WORKS
-$EmployeeSite = $Context.Site.OpenWeb("Employee")
-$Context.Load($EmployeeSite)
-$Context.ExecuteQuery()
+	New-K2EnableDocumentType -SPWeb $Context.Web -List $List
 
-Write-Host -ForegroundColor Green $EmployeeSite.Url
+	$List = Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
 
-
-# GET LIST - WORKS
-$SupportList = $EmployeeSite.Lists.GetByTitle("Support Engineers")
-$Context.Load($SupportList)
-$Context.ExecuteQuery()
-
-Write-Host -ForegroundColor Green $SupportList.Id
+}
 
 
+# ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Existing/Libraries")
 
-$SupportListData = $config.SelectSingleNode("/Environment/SiteCollection/Sites/Site[3]/Lists/List[1]/ListData")
+foreach($Library in $SCLibraries.Library) {    
 
-$List = $SupportList
+    $List = $null
+	
+	$List = Get-K2SPOList -SPWeb $Context.Web -ListName $Library
 
-Write-Host -ForegroundColor Red $SupportListData.OuterXml
+	if ($List-eq $null) {
+        Write-Host -ForegroundColor Red "Specified existing library doesn't exist"
+        break
+	}
 
+	Add-K2DocumentsToLibrary -SPWeb $Context.Web -Library $Library -List $List
+}
 
-    $ListData = $SupportListData
-        foreach($ItemData in $ListData.Item) {
-            
-            $listvalues = @{}
+    # MODIFY THE SITE LOGO
+    $LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+	Set-K2SPSiteLogo -LongFileName $LongFileName
 
-                foreach($ItemField in $ItemData.Field) {
-                    $FieldValue = $ItemField.InnerText                
-
-                    $FieldType = $ItemField.GetAttribute("Type")
-            
-                    if($FieldType -ne $null -and $FieldType -ne "" -and $FieldType.ToLower() -eq "user") {
-                
-                        #Assumes you've put in a valid email
-                        $OutputUserObject = $Context.Web.EnsureUser($FieldValue) #user@tenant.onmicrosoft.com
-                        $Context.Load($OutputUserObject)
-                        $Context.ExecuteQuery()
-                        Write-Host "User Id: "  $OutputUserObject.Id
-                        $FieldValue = $OutputUserObject.Id
-
-                        #$FieldValue = 9
-                    }
-
-                   $listvalues.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)
-
-                }                
-
-                Write-Output $listvalues
-
-            $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
-            $Item = $List.AddItem($ListItemInfo)
+    # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
+	Set-K2TrimMenu -SPWeb $Context.Web
 
 
-            $listvalues.GetEnumerator() | % {
-                $Item[$_.Key] = $_.Value
-            }
 
-                        $Item.Update()
-            $Context.ExecuteQuery()
+# CUSTOMIZE SITE - SITES
+$SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
 
-        }
+foreach($Site in $SCSites.Site) {
+
+	$NewSubSite = New-K2CreateSite -SPWeb $Context.Web -Site $Site
+  
+    # CUSTOMIZE SUB SITE - LISTS
+    $SCLists = $Site.Lists
+    foreach($Library in $SCLists.List) {    
+	
+		$List = New-K2SPOList -SPWeb $NewSubSite -Library $Library
+
+		$List = Add-K2DataToList -SPWeb $NewSubSite -Library $Library -List $List
+	
+    }
+
+
+    # CUSTOMIZE SUB SITE - LIBRARIES
+    $SCLibraries = $Site.Libraries
+    foreach($Library in $SCLibraries.Library) {    
+
+   		$List = New-K2SPOList -SPWeb $NewSubSite -Library $Library
+
+		New-K2EnableDocumentType -SPWeb $NewSubSite -List $List
+
+		$List = Add-K2DocumentsToLibrary -SPWeb $NewSubSite -Library $Library -List $List
+
+    }
+
+	Set-K2TrimMenu -SPWeb $NewSubSite
+
+    # Reorganize Quick Launch
+
+    # Update Pages
+
+}
+
+
+$Context.Dispose()
+
+
 

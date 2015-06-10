@@ -27,10 +27,33 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="EnvironmentConfig.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="K2OnPremisesProvisioning.ps1" />
+    <Content Include="..\CSOMFunctions.ps1">
+      <Link>CSOMFunctions.ps1</Link>
+    </Content>
+    <Content Include="..\EnvironmentConfig.xml">
+      <Link>EnvironmentConfig.xml</Link>
+    </Content>
+    <Content Include="..\EnvironmentConfigOnline.xml">
+      <Link>EnvironmentConfigOnline.xml</Link>
+    </Content>
+    <Content Include="..\K2DeploySharePointAppOnPremises.ps1">
+      <Link>K2DeploySharePointAppOnPremises.ps1</Link>
+    </Content>
+    <Content Include="..\K2OnlineProvisioning-Refactor.ps1">
+      <Link>K2OnlineProvisioning-Refactor.ps1</Link>
+    </Content>
+    <Content Include="..\K2OnlineProvisioning.ps1">
+      <Link>K2OnlineProvisioning.ps1</Link>
+    </Content>
+    <Content Include="..\K2OnPremisesProvisioning.ps1">
+      <Link>K2OnPremisesProvisioning.ps1</Link>
+    </Content>
+    <Content Include="..\TEST - CSOM.ps1">
+      <Link>TEST - CSOM.ps1</Link>
+    </Content>
+    <Content Include="..\TEST - Upload Files Online.ps1">
+      <Link>TEST - Upload Files Online.ps1</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="Build" />
