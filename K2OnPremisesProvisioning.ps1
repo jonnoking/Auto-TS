@@ -4,6 +4,9 @@ Set-ExecutionPolicy Unrestricted
 # Load SP Snapin
 Add-PsSnapin Microsoft.SharePoint.PowerShell -ErrorAction:SilentlyContinue
 
+# ADD CSOM FUNCTIONS
+. .\Development\Auto-TS\ReusableFunctionsOnPrem.ps1
+
 
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfig.xml
@@ -24,16 +27,18 @@ $SCOwner = $config.Environment.SiteCollection.Owner
 $SCSecondaryOwner = $config.Environment.SiteCollection.SecoondaryOwner
 $SCLanguage = $config.Environment.SiteCollection.Language
 
-
+#Check if Site Collection Already exists
 $SPExists = (Get-SPSite $SCUrl -ErrorAction SilentlyContinue) -ne $null
-
-
 if ($SPExists)
 {
     Write-Host -ForegroundColor Red "Site Collection already exists"
     Remove-SPSite -Identity $SCUrl -GradualDelete -Confirm:$false
     Write-Host -ForegroundColor Red "SCRIPTED HAS STOPPED"
     return
+}
+else
+{
+	Write-Host -ForegroundColor Red "Site Collection does not exist"
 }
 
 # CREATE SITE COLLECTION
@@ -58,44 +63,16 @@ $SCS = Get-SPWeb -Identity $SCUrl
 # CUSTOMIZE PARENT SITE - LISTS
 $SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
 
-foreach($Library in $SCLists.List) {    
-
-    $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-    $SCS.Update();
-
-    $lib = $SCS.Lists[$Library.Name]
-    $lib.OnQuickLaunch = $true;
-    $lib.Update();
-
-    # CUSTOMIZE LIBRARY
-    foreach($Field in $Library.CustomFields.Field) {
-
-        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
-            
-            $LookupListName = $Field.GetAttribute("List");
-            $LookupList = $SCS.Lists[$LookupListName]
-            $LookupListId = "{" +$LookupList.ID + "}"
-            $Field.SetAttribute("List", $LookupListId) 
-        }
-
-        $regionCol = $Field.OuterXml
-        $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
-        $lib.Update();
-    }
-
-
-    $ListData = $Library.ListData
-    foreach($ItemData in $ListData.Item) {
-
-        $spItem = $lib.AddItem()
-
-        foreach($ItemField in $ItemData.Field) {
-            $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
-        }
-        
-        $spItem.Update()
-    }
-
+foreach($Library in $SCLists.List) {
+    $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
+    if ($List -ne $null) {
+            Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+            continue
+    }    
+    New-K2SPList -SPWeb $SCS -Library $Library 
+    $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
+    Add-K2DataToList -SPWeb $SCS -Library $Library -List $List
+    $List = $null
 }
 
 
@@ -103,67 +80,44 @@ foreach($Library in $SCLists.List) {
 $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
 
 foreach($Library in $SCLibraries.Library) {    
-    $SCS.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-    $SCS.Update();
-    
-    $lib = $SCS.Lists[$Library.Name]
-    $lib.OnQuickLaunch = $true;
-    $lib.ContentTypesEnabled = $true
-    #$lib.Update();
-
-    $DocSet = $SCS.ContentTypes["Document Set"]
-    $ct = $lib.ContentTypes.Add($DocSet)
-    $lib.Update();
-
-    # CUSTOMIZE LIBRARY
-    foreach($Field in $Library.CustomFields.Field) {
-        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
-            
-            $LookupListName = $Field.GetAttribute("List");
-            $LookupList = $SCS.Lists[$LookupListName]
-            $LookupListId = "{" +$LookupList.ID + "}"
-            $Field.SetAttribute("List", $LookupListId) 
-        }
-        $regionCol = $Field.OuterXml
-        $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
-        $lib.Update();
-    }
-
-    $ListData = $Library.ListData
-    foreach($ItemData in $ListData.Item) {
-
-    # Upload File
-    # Needs to allow for uploading to Document Sets - Check it exists, create if required, upload to Doc Set
-        $spItem = $null
-        
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
-
-                # Assumes local file
-                $LibFile = $ItemField.InnerText
-                $File = Get-ChildItem $LibFile
-                $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                $LibFolder = $SCS.GetFolder($Library.Name);
-
-                $LibFiles = $LibFolder.Files
-                
-                $spItem = $LibFiles.Add($Library.Name+"/"+$LibFileName, $File.OpenRead(),$false)
-                break
-            }
-        }
-
-        foreach($ItemField in $ItemData.Field) {
-            if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-
-                $spItem.Item[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
-            }
-        }
-
-        $spItem.Item.Update()
-    }
-
+    $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
+    if ($List -ne $null) {
+            Write-Host -ForegroundColor Red "Library $Library.Name already exists. Stepping over."
+            continue
+    }    
+    New-K2SPList -SPWeb $SCS -Library $Library 
+    $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
+    New-K2EnableDocumentType -SPWeb $SCS -List $List
+    Add-K2DocumentsToLibrary -SPWeb $SCS -Library $Library -List $List
+    $List = $null
 }
+
+# REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
+    Write-Host -ForegroundColor Blue "Removing quicklaunch navigation from " $SCweb.Name
+    Set-K2TrimMenu -SPWeb $SCweb
+
+
+# ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
+$SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Existing/Libraries")
+
+foreach($Library in $SCLibraries.Library) {    
+
+	$List = Get-K2SPList -SPWeb $SCweb -ListName $Library.Name
+
+	if ($List-eq $null) {
+        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
+        continue
+	}
+
+	Add-K2DocumentsToLibrary -SPWeb $SCweb -Library $Library -List $List
+
+    $List = $null
+}
+
+
+# MODIFY THE SITE LOGO
+$LongFileName = $config.SelectSingleNode("/Environment/SiteCollection/Existing/Libraries/Library[Name='Site Assets']/ListData/Item[1]/Field[@Property='File']").InnerText
+Set-K2SPSiteLogo -LongFileName $LongFileName -SPWeb $SCweb -SCUrlName $SCUrlName
 
 
 #REGION Create Sites
@@ -171,131 +125,44 @@ foreach($Library in $SCLibraries.Library) {
 $SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
 
 foreach($Site in $SCSites.Site) {
-
+    Write-Host -ForegroundColor Blue "Creating Site " $Site.Name
     $SiteUrl = $SCUrl + "/" + $Site.UrlName
-    #Remove-SPWeb -Identity $SiteUrl -Confirm:$false
-
-    Write-Output $SiteUrl
     $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
 
 
     # CUSTOMIZE SUB SITE - LISTS
     $SCLists = $Site.Lists
-
-    #$lib = $SCS.Lists[$Library.Name]
-    #$lib.OnQuickLaunch = $true;
-    #$lib.Update();
-
-    foreach($Library in $SCLists.List) {    
-
-        $NewSubSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-        $NewSubSite.Update();
-
-        $lib = $NewSubSite.Lists[$Library.Name]
-        $lib.OnQuickLaunch = $true;
-        $lib.Update();
-
-        # CUSTOMIZE LIBRARY
-        foreach($Field in $Library.CustomFields.Field) {
-        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
-            
-            $LookupListName = $Field.GetAttribute("List");
-            $LookupList = $SCS.Lists[$LookupListName]
-            $LookupListId = "{" +$LookupList.ID + "}"
-            $Field.SetAttribute("List", $LookupListId) 
-        }
-            $regionCol = $Field.OuterXml
-            $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
-            $lib.Update();
-        }
-
-
-        $ListData = $Library.ListData
-        foreach($ItemData in $ListData.Item) {
-
-            $spItem = $lib.AddItem()
-
-            foreach($ItemField in $ItemData.Field) {
-                $spItem[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
-            }
-        
-            $spItem.Update()
-        }
-
+    foreach($Library in $SCLists.List) {   
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
+        if ($List -ne $null) {
+                Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+                continue
+        }    
+        New-K2SPList -SPWeb $NewSubSite -Library $Library 
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
+        Add-K2DataToList -SPWeb $NewSubSite -Library $Library -List $List
+        $List = $null
     }
 
     # CUSTOMIZE SUB SITE - LIBRARIES
     $SCLibraries = $Site.Libraries
-
-    foreach($Library in $SCLibraries.Library) {    
-        $NewSubSite.Lists.Add($Library.Name, $Library.Description, [Microsoft.SharePoint.SPListTemplateType]$Library.ListType);
-        $NewSubSite.Update();
-
-        $lib = $NewSubSite.Lists[$Library.Name]
-        $lib.OnQuickLaunch = $true;
-        $lib.ContentTypesEnabled = $true
-        #$lib.Update();
-
-        $DocSet = $SCS.ContentTypes["Document Set"]
-        $ct = $lib.ContentTypes.Add($DocSet)
-        $lib.Update();
-
-        # CUSTOMIZE LIBRARY
-        foreach($Field in $Library.CustomFields.Field) {
-        if($Field.GetAttribute("Type").ToLower() -eq "lookup") {
-            
-            $LookupListName = $Field.GetAttribute("List");
-            
-            # Not working - Column found but list doesn't get reference
-            if($LookupListName.StartsWith("SC.")) {
-                #$LN = $LookupListName.Replace("SC.", "")
-                $LookupList = $SCS.Lists[$LookupListName.Replace("SC.", "")]
-            } else { 
-                $LookupList = $NewSubSite.Lists[$LookupListName.Replace("SC.", "")]
-            }            
-            
-            $LookupListId = "{" +$LookupList.ID + "}"
-            $Field.SetAttribute("List", $LookupListId) 
-        }
-            $regionCol = $Field.OuterXml
-            $lib.Fields.AddFieldAsXml($regionCol, $true, [Microsoft.SharePoint.SPAddFieldOptions]::AddFieldToDefaultView)
-            $lib.Update();
-        }
-
-        $ListData = $Library.ListData
-        foreach($ItemData in $ListData.Item) {
-
-            # Upload File
-            $spItem = $null
-        
-            foreach($ItemField in $ItemData.Field) {
-                if($ItemField.GetAttribute("Property").ToLower() -eq "file") {
-
-                    # Assumes local file
-                    $LibFile = $ItemField.InnerText
-                    $File = Get-ChildItem $LibFile
-                    $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
-                
-                    $LibFolder = $NewSubSite.GetFolder($Library.Name);
-
-                    $LibFiles = $LibFolder.Files
-
-                    $spItem = $LibFiles.Add($Library.Name+"/"+$LibFileName, $File.OpenRead(),$false)
-                    break
-                }
-            }
-
-            foreach($ItemField in $ItemData.Field) {
-                if($ItemField.GetAttribute("Property").ToLower() -ne "file") {
-
-                    $spItem.Item[$ItemField.GetAttribute("Property")] = $ItemField.InnerText
-                }
-            }
-
-            $spItem.Item.Update()
-        }
+    foreach($Library in $SCLibraries.Library) {
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
+        if ($List -ne $null) {
+                Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+                continue
+        }    
+        New-K2SPList -SPWeb $NewSubSite -Library $Library 
+        $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
+        New-K2EnableDocumentType -SPWeb $SCS -List $List
+        Add-K2DocumentsToLibrary -SPWeb $NewSubSite -Library $Library -List $List
+        $List = $null
 
     }
+    
+    # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING EACH SUB-SITE
+    Write-Host -ForegroundColor Blue "Removing quicklaunch navigation from " $Site.Name
+    Set-K2TrimMenu -SPWeb $NewSubSite
 
 }
 #ENDREGION Create Sites
