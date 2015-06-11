@@ -40,7 +40,7 @@ $SCQuota = $config.Environment.SiteCollection.Quota
 
 
 $AdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $TenantAdmin, $TenantAdminPwdSecure
-Connect-SPOService -Url https://k2loud-admin.sharepoint.com/ -Credential $AdminCreds
+Connect-SPOService -Url $BaseAdminUrl -Credential $AdminCreds
 
 
 #Check if Site Collection Exists
