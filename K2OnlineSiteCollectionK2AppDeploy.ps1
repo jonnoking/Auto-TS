@@ -11,6 +11,8 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
+# ADD CSOM FUNCTIONS
+. .\Development\Auto-TS\CSOMFunctions.ps1
 
 # Load Config
 [xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
@@ -64,12 +66,10 @@ if ($SPExists -ne $null -and $SPExists)
 
 
 # get site collection
-$SC = Get-SPOSite $SCUrl -Detailed
-
+#$SC = Get-SPOSite $SCUrl -Detailed
 
 Disconnect-SPOService
 
-Write-Host -ForegroundColor Green "Site Collection Created"
 
 
 $Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
@@ -83,23 +83,60 @@ $newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 S
 $web = $Context.Web
 $site = $Context.Site
 $Context.Load($web)
+$Context.Load($web.Webs)
 $Context.Load($site)
 $Context.ExecuteQuery()
 
 
+
     #assume no dev feature enabled - not great approach - might have to be done manually
-    $guiFeatureGuid = [System.Guid]"e374875e-06b6-11e0-b0fa-57f5dfd72085"
-    $site.Features.Add($guiFeatureGuid, $true, [Microsoft.SharePoint.Client.FeatureDefinitionScope]::None) 
-    $Context.ExecuteQuery() 
+    #$guiFeatureGuid = [System.Guid]"e374875e-06b6-11e0-b0fa-57f5dfd72085"
+    #$site.Features.Add($guiFeatureGuid, $true, [Microsoft.SharePoint.Client.FeatureDefinitionScope]::None) 
+    #$Context.ExecuteQuery() 
+
+    Enable-K2SharePointFeature -SPWeb $Site -FeatureGuid "e374875e-06b6-11e0-b0fa-57f5dfd72085"
+    
+foreach($w in $web.Webs) {
+    
+    $appIoStream = New-Object IO.FileStream($newPackagePath ,[System.IO.FileMode]::Open)
+    $appInstance = $w.LoadAndInstallApp($appIoStream) | Out-Null
+    $Context.ExecuteQuery()
+    Write-Host $appInstance.Id
 
 
-$appIoStream = New-Object IO.FileStream($newPackagePath ,[System.IO.FileMode]::Open)
-$appInstance = $web.LoadAndInstallApp($appIoStream) | Out-Null
-$Context.ExecuteQuery()
-Write-Host $appInstance.Id
+    # This doesn't work because the app install hasn't finished by the time this code has been reached. Either loop and wait for app to install or remove
+    #Set-K2TrimMenuItem -SPWeb $w -MenuItem "Recent"
+
+}
+
+    Disable-K2SharePointFeature -SPWeb $Site -FeatureGuid "e374875e-06b6-11e0-b0fa-57f5dfd72085"
+
+    #$site.Features.Remove($guiFeatureGuid, $true) 
+    #$Context.ExecuteQuery() 
+
+
+    #clean up after enabling developer feature
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Apps in Testing"
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Samples"
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Developer Center"
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Recent"
+    
+    Delete-K2SPList -SPWeb $web -ListTitle "Apps in Testing"
+    Delete-K2SPList -SPWeb $web -ListTitle "App Packages"
+
+    #Set-K2WebHomePage -SPWeb $web -PageUrl "SitePages/Home.aspx"
+    Set-K2WebHomePage -SPWeb $web -PageUrl "K2DemoPages/DemoPage1.aspx"
+
+
+    #wiki homepage feature - 00bfea71-d8fe-4fec-8dad-01c19a6e4053
+
 
 $appIoStream.Dispose()
 $Context.Dispose()
+
+
+#Laucnh IE to run through App registration wizard
+
 
 
  

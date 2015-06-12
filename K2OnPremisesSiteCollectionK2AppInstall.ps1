@@ -121,18 +121,5 @@ foreach($web in $SC.AllWebs)
     }
 }
 
-## online
 
-
-$appIoStream = New-Object IO.FileStream(“C:\TestApp.app” ,[System.IO.FileMode]::Open)
-$appInstance = $web.LoadAndInstallApp($appIoStream) | Out-Null
-$context.ExecuteQuery()
-Write-Host $appInstance.Id
-
-
-##
-
-
-
-Write-Host "Installing K2 App from Catalog"
 

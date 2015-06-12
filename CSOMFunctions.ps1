@@ -47,12 +47,14 @@ function New-K2SPList {
             $ListInfo.TemplateType = [Microsoft.SharePoint.SPListTemplateType]$Library.ListType #$ListDictionary.Get_Item($Library.ListType)
             $List = $SPWeb.Lists.Add($ListInfo)
             $List.Description = $Library.Description
-
+            $List.ContentTypesEnabled = $true
+        
             $ListQuickLaunch = $null
             $ListQuickLaunch = $Library.GetAttribute("QuickLaunch")
             if ($ListQuickLaunch -ne $null -and $ListQuickLaunch.ToLower() -ne "false") {
                 $List.OnQuickLaunch = $true
             }       
+
 
             $List.Update()
             $Context.ExecuteQuery()
@@ -87,6 +89,62 @@ function New-K2SPList {
     }
 
 }
+
+function Delete-K2SPList {
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$ListTitle
+    )
+
+
+    process {
+
+        $list = $SPWeb.Lists.GetByTitle($ListTitle)
+        $list.DeleteObject()
+        $Context.ExecuteQuery()
+    }
+}
+
+
+function Enable-K2SharePointFeature {
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$FeatureGuid
+    )
+
+
+    process {
+
+        $guiFeatureGuid = [System.Guid]$FeatureGuid
+        $SPWeb.Features.Add($guiFeatureGuid, $true, [Microsoft.SharePoint.Client.FeatureDefinitionScope]::None) 
+        $Context.ExecuteQuery() 
+    }
+}
+
+function Disable-K2SharePointFeature {
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$FeatureGuid
+    )
+
+
+    process {
+
+        $guiFeatureGuid = [System.Guid]$FeatureGuid
+        $SPWeb.Features.Remove($guiFeatureGuid, $true) 
+        $Context.ExecuteQuery() 
+    }
+}
+
 
 function Add-K2DataToList {
 
@@ -126,6 +184,7 @@ function Add-K2DataToList {
             $ListItemInfo = New-Object Microsoft.SharePoint.Client.ListItemCreationInformation
             $Item = $List.AddItem($ListItemInfo)
 
+            $ListValuesHash
             $ListValuesHash.GetEnumerator() | % {
                 $Item[$_.Key] = $_.Value
             }
@@ -245,7 +304,8 @@ function Add-K2DocumentsToLibrary {
                     $ListValuesHash.Add($ItemField.GetAttribute("Property").Replace(" ", "_x0020_"), $FieldValue)            
                 }
             }
-
+            
+            $ListValuesHash
             $ListValuesHash.GetEnumerator() | % {
                 $UploadItem[$_.Key] = $_.Value
             }
@@ -377,6 +437,36 @@ function Set-K2TrimMenu {
 }
 
 
+function Set-K2TrimMenuItem {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$MenuItem
+    )
+
+    process {
+
+        # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
+        $QLNav = $SPWeb.Navigation.QuickLaunch; 
+        $Context.Load($QLNav)
+        $Context.ExecuteQuery()
+
+        $QLMeunItem = $null
+        $QLNav | where {$_.Title -eq $MenuItem} |  foreach {
+            $QLMeunItem = $_
+        }
+
+        if ($QLMeunItem -ne $null -and $QLMeunItem -ne "") {
+            $QLMeunItem.DeleteObject() 
+            $Context.ExecuteQuery()
+        }
+
+    }
+}
+
 function New-K2CreateSite {
     [CmdletBinding()]
 
@@ -423,6 +513,26 @@ function New-K2CreateSite {
 
 }
 
+
+function Set-K2WebHomePage {
+    [CmdletBinding()]
+
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$PageUrl
+    )
+
+    process {
+        
+        $rootFolder = $SPWeb.RootFolder; 
+        $rootFolder.WelcomePage = $PageUrl;
+        $rootFolder.Update();
+        $Context.ExecuteQuery();
+   }
+}
 
 
 function Get-K2SPWeb {
