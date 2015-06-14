@@ -66,7 +66,7 @@ if ($SPExists -ne $null -and $SPExists)
 
 
 # get site collection
-#$SC = Get-SPOSite $SCUrl -Detailed
+$SC = Get-SPOSite $SCUrl -Detailed
 
 Disconnect-SPOService
 
@@ -98,14 +98,14 @@ $Context.ExecuteQuery()
 
     Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
     
-foreach($w in $web.Webss) {
+    foreach($w in $web.Webs) {
     
-    Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
+        Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
 
-    # This doesn't work because the app install hasn't finished by the time this code has been reached. Either loop and wait for app to install or remove
-    #Set-K2TrimMenuItem -SPWeb $w -MenuItem "Recent"
+        # This doesn't work because the app install hasn't finished by the time this code has been reached. Either loop and wait for app to install or remove
+        #Set-K2TrimMenuItem -SPWeb $w -MenuItem "Recent"
 
-}
+    }
 
     Disable-K2SharePointFeature -SPWeb $Site -FeatureGuid "e374875e-06b6-11e0-b0fa-57f5dfd72085"
 
@@ -127,31 +127,45 @@ foreach($w in $web.Webss) {
 
 
     #wiki homepage feature - 00bfea71-d8fe-4fec-8dad-01c19a6e4053
+   
+
+    #Navigate to Site Contents
+    ## Mouse over app --> ... --> Permissions --> "click HERE to tust again"
+    $SiteContentsUrl = $SC.Url + "/_layouts/15/start.aspx#/_layouts/15/viewlsts.aspx"
+    $ie = New-Object -com internetexplorer.application; 
+    $ie.visible = $true; 
+    $ie.navigate($SiteContentsUrl);
 
 
-    $appIoStream.Dispose()
-    $Context.Dispose()
 
-    
-    $K2SettingsList = Get-K2SPList -SPWeb $web -ListName "K2 Settings"
+    ##### K2 Settings list doesn't exist until the app has been trusted #####
+    ##### Won't be able to automate on first install - maybe for updates #####
 
     # ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
-    $Library = $config.SelectNodes("/Environment/SiteCollection/Existing/Lists/List[Name='K2 Settings']")
+    #$Library = $config.SelectNodes("/Environment/SiteCollection/Existing/Lists/List[Name='K2 Settings']")
 
-	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+	#$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
 
-	if ($List-eq $null) {
-        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
-        continue
-	}
+	#if ($List-eq $null) {
+    #    Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
+    #    continue
+	#}
 
-	Add-K2DataToList -SPWeb $web -Library $Library -List $List
+	#Add-K2DataToList -SPWeb $web -Library $Library -List $List
 
-    $List = $null
+    #$List = $null
+
+##########
+
+    #https://k2loud.sharepoint.com/sites/jonnotech/_layouts/15/start.aspx#/_layouts/15/viewlsts.aspx
 
 
-#Laucnh IE to run through App registration wizard
+    ##### Until the app has been trusted this will show an error about not having permissions #####
+    # Get top level site K2 App
+    #$K2App = Get-K2AppWeb -SPWeb $Context.Web -AppTitle "K2 blackpearl for SharePoint"
+    
+    #$AppRegUrl = $K2App.Url + "/Pages/Registration.aspx?SPSiteURL=" + $SC.Url
 
-
-
- 
+    #$ie = New-Object -com internetexplorer.application; 
+    #$ie.visible = $true; 
+    #$ie.navigate($AppRegUrl);

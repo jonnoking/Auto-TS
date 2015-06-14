@@ -592,3 +592,49 @@ function Add-K2SideLoadApp {
     }
 
 }
+
+
+function Get-K2AppWeb {
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$AppTitle
+    )
+
+    process {
+            
+
+        $web = $Context.Web
+        $site = $Context.Site
+        $Context.Load($web)
+        $Context.Load($web.Webs)
+        $Context.Load($site)
+        $Context.ExecuteQuery()
+
+        $K2App = $null
+
+        foreach($w in $web.Webs) {
+            Write-Host $w.Title " - " $w.Url
+
+            if ($w.Title -eq $AppTitle) {
+                $K2App = $w
+                Write-Host "Found App"
+                break
+            }
+
+        }
+
+#        $web.Webs | where {$_.Title -eq $K2AppTitle }|  foreach {
+#            $K2App = $_
+#        }
+
+        Write-Output $K2App
+
+        $Context.ExecuteQuery()
+
+    }
+
+}
+

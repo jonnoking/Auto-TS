@@ -77,7 +77,11 @@ $Creds = New-Object Microsoft.SharePoint.Client.SharePointOnlineCredentials($Ten
 $Context.Credentials = $Creds
 
 
+$K2App = Get-K2AppWeb -SPWeb $Context.Web -AppTitle "K2 blackpearl for SharePoint"
 
+$q = 0
+
+return
 
 $K2SettingsList = Get-K2SPList -SPWeb $web -ListName "K2 Settings"
 
