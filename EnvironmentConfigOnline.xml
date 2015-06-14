@@ -203,17 +203,56 @@
         <Description>K2DemoPages</Description>
         <ListType>WebPageLibrary</ListType>
         <CustomFields></CustomFields>
-        <ItemData>
+        <ListData>
           <Item>
             <Field Property="File">C:\Development\Auto-TS\Files\DemoPage1.aspx</Field>
           </Item>
           <Item>
-            <Field Property="File">C:\Development\Auto-TS\Files\OnPremDemoPage1.aspx</Field>
+            <Field Property="File">C:\Development\Auto-TS\Files\OnPremDemoPage.aspx</Field>
           </Item>
-        </ItemData>
+        </ListData>
       </Library>
     </Libraries>
     <Existing>
+      <Lists>
+        <List>
+          <Name>K2 Settings</Name>
+          <ListData>
+            <Item>
+              <Field Property="Title">Solution_Designers</Field>
+              <Field Property="Value">6;8</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Solution_Participants</Field>
+              <Field Property="Value">6;8</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Runtime</Field>
+              <Field Property="Value">SmartForms Runtime SSL</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Designer</Field>
+              <Field Property="Value">SmartForms Designer SSL</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Application_Version</Field>
+              <Field Property="Value">4.4120.5.0</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Runtime_URL</Field>
+              <Field Property="Value">https://k2.denallix.com/Runtime/Runtime</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Application_Full_Control</Field>
+              <Field Property="Value">true</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Forms_Base_URL</Field>
+              <Field Property="Value">/K2Pages</Field>
+            </Item>
+          </ListData>
+        </List>
+      </Lists>
       <Libraries>
         <Library>
           <Name>Site Assets</Name>

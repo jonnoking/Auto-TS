@@ -571,3 +571,24 @@ function Get-K2SPWeb {
         }
     }
 }
+
+
+function Add-K2SideLoadApp {
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$AppPath
+    )
+
+    process {
+
+        $appIoStream = New-Object IO.FileStream($AppPath ,[System.IO.FileMode]::Open)
+        $appInstance = $SPWeb.LoadAndInstallApp($appIoStream) | Out-Null
+        $Context.ExecuteQuery()
+
+        $appIoStream.Dispose()
+    }
+
+}

@@ -95,14 +95,12 @@ $Context.ExecuteQuery()
     #$Context.ExecuteQuery() 
 
     Enable-K2SharePointFeature -SPWeb $Site -FeatureGuid "e374875e-06b6-11e0-b0fa-57f5dfd72085"
-    
-foreach($w in $web.Webs) {
-    
-    $appIoStream = New-Object IO.FileStream($newPackagePath ,[System.IO.FileMode]::Open)
-    $appInstance = $w.LoadAndInstallApp($appIoStream) | Out-Null
-    $Context.ExecuteQuery()
-    Write-Host $appInstance.Id
 
+    Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
+    
+foreach($w in $web.Webss) {
+    
+    Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
 
     # This doesn't work because the app install hasn't finished by the time this code has been reached. Either loop and wait for app to install or remove
     #Set-K2TrimMenuItem -SPWeb $w -MenuItem "Recent"
@@ -131,8 +129,25 @@ foreach($w in $web.Webs) {
     #wiki homepage feature - 00bfea71-d8fe-4fec-8dad-01c19a6e4053
 
 
-$appIoStream.Dispose()
-$Context.Dispose()
+    $appIoStream.Dispose()
+    $Context.Dispose()
+
+    
+    $K2SettingsList = Get-K2SPList -SPWeb $web -ListName "K2 Settings"
+
+    # ADD CONTENT TO EXISTING LIBRARIES e.g. SITE ASSETS, SITE PAGES
+    $Library = $config.SelectNodes("/Environment/SiteCollection/Existing/Lists/List[Name='K2 Settings']")
+
+	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
+
+	if ($List-eq $null) {
+        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
+        continue
+	}
+
+	Add-K2DataToList -SPWeb $web -Library $Library -List $List
+
+    $List = $null
 
 
 #Laucnh IE to run through App registration wizard
