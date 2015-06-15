@@ -42,12 +42,19 @@ if (!$SPExists)
     return
 }
 $SC = Get-SPSite $SCUrl
+#$SC = Get-SPWebApplication -Identity $SCUrl
+
 $AppName = "K2 blackpearl for SharePoint" #Appit app name?
 $newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 Setup\SharePoint App\K2 for SharePoint.app"
 
-$SCS = Get-SPWebApplication -Identity "https://portal.denallix.com"
+
+
+$SCS = Get-SPWebApplication -Identity $SCUrl
+
+#$SCS = Get-SPSite -Identity $SCUrl
+
 # Get App
-$appInstance = Get-SPAppInstance -Web "https://portal.denallix.com" | where-object {$_.Title -eq $AppName}
+$appInstance = Get-SPAppInstance -Web $SCUrl | where-object {$_.Title -eq $AppName}
 if ($err) 
 {
     Write-Host -ForegroundColor Yellow "An error occurred getting app"
@@ -89,18 +96,25 @@ if ($err -or ($updatedApp -eq $null))
 
 foreach($web in $SC.AllWebs)
 {
-    if(!$web.IsAppWeb) {    
+    if(!$web.IsAppWeb) {
+        Write-Host -ForegroundColor Yellow $web.Url    
         Install-SPApp -Web $web.Url -Identity $updatedApp
     }
 }
 $appInstance = Get-SPAppInstance -Web $SC.Url | where-object {$_.Title -eq $AppName}
 
+Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Recent"
+Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Subsites"
+
+Set-K2WebHomePage -SPWeb $SC.RootWeb -PageUrl "K2DemoPages/OnPremDemoPage.aspx.aspx"
 
 
 $url = $SC.Url +"/_layouts/15/start.aspx#/_layouts/15/AppInv.aspx?Manage=1&AppInstanceId=" + $appInstance.Id +"&Source=" + [System.Web.HttpUtility]::UrlEncode($SC.Url + "/_layouts/15/viewlsts.aspx")
 $ie = New-Object -com internetexplorer.application; 
 $ie.visible = $true; 
 $ie.navigate($url);
+
+
 
 
 return 

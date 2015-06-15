@@ -2,14 +2,14 @@
 <Environment>
   <Settings>
     <TenantAdmin>jonno@k2loud.onmicrosoft.com</TenantAdmin>
-    <TenantAdminPassword>K2nkK2007</TenantAdminPassword>
-    <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
+    <TenantAdminPassword>K22nkK22007</TenantAdminPassword>
+    <SiteBaseUrl>https://k2loud.sharepoint.com</SiteBaseUrl>
     <SiteAdminUrl>https://k2loud-admin.sharepoint.com</SiteAdminUrl>
   </Settings>
   <SiteCollection>
-    <Name>Jonno Tech</Name>
+    <Name>Jonno Technology</Name>
     <UrlName>jonnotech</UrlName>
-    <Description>Jonno Tech</Description>
+    <Description>Denallix Technology</Description>
     <Template>STS#0</Template>
     <Owner>denallix\administrator</Owner>
     <SecondaryOwner>denallix\k2webservice</SecondaryOwner>
@@ -115,17 +115,17 @@
         <ListData>
           <Item>
             <Field Property="Title">Senior Software Support Engineer</Field>
-            <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+            <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
             <Field Property="Support Category">Software</Field>
           </Item>
           <Item>
             <Field Property="Title">Senior Network Engineer</Field>
-            <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+            <Field Property="Engineer" Type="User">Jonathan King</Field>
             <Field Property="Support Category">Network</Field>
           </Item>
           <Item>
             <Field Property="Title">Junior Hardware Engineer</Field>
-            <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+            <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
             <Field Property="Support Category">Hardware</Field>
           </Item>
         </ListData>
@@ -214,6 +214,45 @@
       </Library>
     </Libraries>
     <Existing>
+      <Lists>
+        <List>
+          <Name>K2 Settings</Name>
+          <ListData>
+            <Item>
+              <Field Property="Title">Solution_Designers</Field>
+              <Field Property="Value">6;8</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Solution_Participants</Field>
+              <Field Property="Value">6;8</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Runtime</Field>
+              <Field Property="Value">SmartForms Runtime SSL</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Designer</Field>
+              <Field Property="Value">SmartForms Designer SSL</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Application_Version</Field>
+              <Field Property="Value">4.4120.5.0</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">SmartForms_Runtime_URL</Field>
+              <Field Property="Value">https://k2.denallix.com/Runtime/Runtime</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Application_Full_Control</Field>
+              <Field Property="Value">true</Field>
+            </Item>
+            <Item>
+              <Field Property="Title">Forms_Base_URL</Field>
+              <Field Property="Value">/K2Pages</Field>
+            </Item>
+          </ListData>
+        </List>
+      </Lists>
       <Libraries>
         <Library>
           <Name>Site Assets</Name>
@@ -227,6 +266,182 @@
       </Libraries>
     </Existing>
     <Sites>
+      <Site>
+        <Name>Sales Portal</Name>
+        <UrlName>Sales</UrlName>
+        <Description>Sales Portal</Description>
+        <Template>STS#0</Template>
+        <Language>1033</Language>
+        <Lists>
+          <List QuickLaunch="True">
+            <Name>Sales Announcements</Name>
+            <Description>Sales Announcements</Description>
+            <ListType>Announcements</ListType>
+            <CustomFields>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </List>
+          <List QuickLaunch="True">
+            <Name>Meeting Room Booking</Name>
+            <Description>Meeting Room Booking</Description>
+            <ListType>Events</ListType>
+            <CustomFields>
+            </CustomFields>
+            <ListData>
+              <Item>
+                <Field Property="Title">Team Dinner</Field>
+                <Field Property="Location">Some Bar</Field>
+                <Field Property="EventDate">2015-06-08 14:00</Field>
+                <Field Property="EndDate">2015-06-08 15:00</Field>
+                <Field Property="Description">Team dinner to celebrate big deal</Field>
+              </Item>
+            </ListData>
+          </List>
+          <List>
+            <Name>Opportunity Issues</Name>
+            <Description>Opportunity Issues</Description>
+            <ListType>IssueTracking</ListType>
+            <CustomFields>
+              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+              <Field Type='Text' DisplayName='Account Id' Required='FALSE' MaxLength='255' StaticName='Account Id' Name='Account Id'/>
+              <Field Type='Text' DisplayName='Account Number' Required='FALSE' MaxLength='255' StaticName='Account Number' Name='Account Number'/>
+              <Field Type='URL' DisplayName='View Flow' Format='Hyperlink' Name='View Flow' StaticName='View Flow' Required='False'/>
+            </CustomFields>
+            <ListData>
+            </ListData>
+          </List>
+          <List>
+            <Name>Product List</Name>
+            <Description>Product List</Description>
+            <ListType>GenericList</ListType>
+            <CustomFields>
+            </CustomFields>
+            <ListData>
+              <Item>
+                <Field Property="Title">Software</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Professional Services</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Maintenance and Support</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Premier Support</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Management Consulting</Field>
+              </Item>
+            </ListData>
+          </List>
+          <List>
+            <Name>Sales Regions</Name>
+            <Description>Sales Regions</Description>
+            <ListType>GenericList</ListType>
+            <CustomFields>
+            </CustomFields>
+            <ListData>
+              <Item>
+                <Field Property="Title">North America - SoCal</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - Central</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - East</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - NOLA</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - Mid Atlantic</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - Heartland</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - NorCal</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">North America - PNW</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Europe - West</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Europe - Central</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Europe - East</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Europe - North</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Asia - China</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Asia - ASEAN</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">Australia</Field>
+              </Item>
+              <Item>
+                <Field Property="Title">MEA</Field>
+              </Item>
+            </ListData>
+          </List>
+        </Lists>
+        <Libraries>
+          <Library QuickLaunch="True">
+            <Name>Account Contracts</Name>
+            <Description>Account Contracts</Description>
+            <ListType>DocumentLibrary</ListType>
+            <CustomFields>
+              <Field Type='Text' DisplayName='Account' Required='FALSE' MaxLength='255' StaticName='Account' Name='Account'/>
+              <Field Type='Text' DisplayName='Account Id' Required='FALSE' MaxLength='255' StaticName='Account Id' Name='Account Id'/>
+              <Field Type='Text' DisplayName='Account Number' Required='FALSE' MaxLength='255' StaticName='Account Number' Name='Account Number'/>
+              <Field Type="Currency" DisplayName="Amount" Required="FALSE" EnforceUniqueValues="FALSE" StaticName="Amount" Name="Amount" />
+              <Field Type='User' DisplayName='Contract Owner' List='UserInfo' ShowField='ImnName' UserSelectionMode='PeopleOnly' UserSelectionScope='0' Name='Contract Owner' StaticName="Contract Owner"/>
+              <Field Type='Text' DisplayName='Products' Required='FALSE' MaxLength='255' StaticName='Products' Name='Products'/>
+              <Field Type='Text' DisplayName='Region' Required='FALSE' MaxLength='255' StaticName='Region' Name='Region'/>
+              <Field Type='Text' DisplayName='Signatory Email' Required='FALSE' MaxLength='255' StaticName='Signatory Email' Name='Signatory Email'/>
+              <Field Type='Text' DisplayName='Signatory Name' Required='FALSE' MaxLength='255' StaticName='Signatory Name' Name='Signatory Name'/>
+              <Field Type='Text' DisplayName='Account Number' Required='FALSE' MaxLength='255' StaticName='Account Number' Name='Account Number'/>
+              <Field Type='URL' DisplayName='Status' Format='Hyperlink' Name='Status' StaticName='Status' Required='False'/>
+            </CustomFields>
+            <ListData>
+              <Item>
+                <Field Property="File">C:\Development\Auto-TS\Files\Edge Communications Contract.docx</Field>
+                <Field Property="Title">Edge Communications Contract</Field>
+                <Field Property="Account Id">001j000000B070jAAB</Field>
+                <Field Property="Account">Edge Communications Contract</Field>
+                <Field Property="Account Number">CD451796</Field>
+                <Field Property="Contract Owner" Type="User">jonno@k2loud.onmicrosoft.com</Field>
+                <Field Property="Amount">35000</Field>
+                <Field Property="Region">North America - NorCal</Field>
+                <Field Property="Products">Software</Field>
+                <Field Property="Signatory Name">Jonathan King</Field>
+                <Field Property="Signatory Email">jonno@outlook.com</Field>
+              </Item>
+              <Item>
+                <Field Property="File">C:\Development\Auto-TS\Files\Burlington Textiles Corp of America Contract.docx</Field>
+                <Field Property="Title">Burlington Textiles Corp of America Contract</Field>
+                <Field Property="Account Id">001j000000B070kAAB</Field>
+                <Field Property="Account">Edge Communications</Field>
+                <Field Property="Account Number">CD656092</Field>
+                <Field Property="Contract Owner" Type="User">jonno@k2loud.onmicrosoft.com</Field>
+                <Field Property="Amount">10000</Field>
+                <Field Property="Region">North America - SoCal</Field>
+                <Field Property="Products">Software</Field>
+                <Field Property="Signatory Name">Jonathan King</Field>
+                <Field Property="Signatory Email">jonno@outlook.com</Field>
+              </Item>
+            </ListData>
+          </Library>
+        </Libraries>
+      </Site>
       <Site>
         <Name>Finance Portal</Name>
         <UrlName>Finance</UrlName>
@@ -421,17 +636,17 @@
             <ListData>
               <Item>
                 <Field Property="Title">Senior Software Support Engineer</Field>
-                <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Software</Field>
               </Item>
               <Item>
                 <Field Property="Title">Senior Network Engineer</Field>
-                <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Network</Field>
               </Item>
               <Item>
                 <Field Property="Title">Junior Hardware Engineer</Field>
-                <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
+                <Field Property="Engineer" Type="User">jonno@k2loud.onmicrosoft.com</Field>
                 <Field Property="Support Category">Hardware</Field>
               </Item>
             </ListData>

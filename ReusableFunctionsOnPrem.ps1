@@ -79,6 +79,53 @@ function Set-K2TrimMenu
 
 }
 
+function Set-K2TrimMenuItem {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+		$MenuItem
+    )
+
+    process {
+        $QLNav = $SPWeb.Navigation.QuickLaunch
+
+        $QLDocs = $null
+        $QLNav | where {$_.Title -eq $MenuItem}|  foreach {
+            $QLDocs = $_
+        }
+    
+        if ($QLDocs -ne $null) { $QLNav.Delete($QLDocs)}
+
+        $SPWeb.Update()
+
+    }
+}
+
+
+function Set-K2WebHomePage {
+    [CmdletBinding()]
+
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+		$SPWeb,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$PageUrl
+    )
+
+    process {
+                
+        $SPFolder = $SPWeb.RootFolder 
+        $SPFolder.WelcomePage = $PageUrl
+        $SPWeb.Update();
+
+   }
+}
+
+
 function Get-K2SPList {
     [CmdletBinding()]
 
