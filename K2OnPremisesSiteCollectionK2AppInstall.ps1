@@ -84,7 +84,7 @@ foreach($web in $SC.AllWebs)
 }
 
 
-$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source CorporateCatalog -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
+$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source ObjectModel -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
 
 if ($err -or ($updatedApp -eq $null)) 
 {
