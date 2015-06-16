@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Packages>
+  <Configuration>
+    <K2ConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5555</K2ConnectionString>
+  </Configuration>
+  <SharePoint>
+    
+  </SharePoint>
+  <Apps>
+    <PreDeploy>
+      <ServiceTypes>
+        <!--<ServiceType>
+            <DllPath>[path]</DllPath>
+            <Name></Name>
+            <DisplayName></DisplayName>
+            <Guid></Guid>
+          </ServiceType>-->
+      </ServiceTypes>
+      <CustomControls>
+
+      </CustomControls>
+      <CopyFiles></CopyFiles>
+    </PreDeploy>
+
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - Ad Hoc Tasks v1.0.kspx</Package>
+    </App>
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - Expense Claim v1.0.kspx</Package>
+    </App>
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - Incident Management v1.0.kspx</Package>
+    </App>
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - Leave Request v1.0.kspx</Package>
+    </App>
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - New Idea Submissions v1.0.kspx</Package>
+    </App>
+    <App>
+      <Package>C:\Development\Auto-TS\Files\K2 Application Accelerator - Travel Request v1.0.kspx</Package>
+    </App>
+
+    <PostDeploy>
+      <Cmdlet>
+        <!-- path to custom powershell script to run-->
+      </Cmdlet>
+    </PostDeploy>
+  </Apps>
+</Packages>
