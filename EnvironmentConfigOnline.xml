@@ -17,6 +17,49 @@
     <Quota>100</Quota>
     <Image></Image>
     <Lists>
+      <List Hidden="True">
+        <Name>K2 Settings</Name>
+        <Description>K2 Settings</Description>
+        <ListType>GenericList</ListType>
+        <CustomFields>
+          <Field Type='Text' DisplayName='Value' Required='FALSE' MaxLength='255' StaticName='Value' Name='Value'/>
+        </CustomFields>
+        <ListData>
+          <Item>
+            <Field Property="Title">Solution_Designers</Field>
+            <Field Property="Value">6;8</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Solution_Participants</Field>
+            <Field Property="Value">6;8</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">SmartForms_Runtime</Field>
+            <Field Property="Value">SmartForms Runtime SSL</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">SmartForms_Designer</Field>
+            <Field Property="Value">SmartForms Designer SSL</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Application_Version</Field>
+            <Field Property="Value">4.4120.5.0</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">SmartForms_Runtime_URL</Field>
+            <Field Property="Value">https://k2.denallix.com/Runtime/Runtime</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Application_Full_Control</Field>
+            <Field Property="Value">true</Field>
+          </Item>
+          <Item>
+            <Field Property="Title">Forms_Base_URL</Field>
+            <Field Property="Value">/K2Pages</Field>
+          </Item>
+        </ListData>
+      </List>
+
       <List>
         <Name>Customer Tickets</Name>
         <Description>Customer Tickets</Description>

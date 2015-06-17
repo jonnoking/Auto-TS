@@ -54,7 +54,14 @@ function New-K2SPList {
             if ($ListQuickLaunch -ne $null -and $ListQuickLaunch.ToLower() -ne "false") {
                 $List.OnQuickLaunch = $true
             }       
+            $ListQuickLaunch = $null
 
+            $ListHidden = $null
+            $ListHidden = $Library.GetAttribute("Hidden")
+            if ($ListHidden -eq $null -and $ListHidden -eq "True") {
+                $List.Hidden = $true
+            }
+            $ListHidden = $null
 
             $List.Update()
             $Context.ExecuteQuery()

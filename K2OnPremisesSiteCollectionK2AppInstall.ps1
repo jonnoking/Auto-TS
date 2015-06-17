@@ -84,7 +84,8 @@ foreach($web in $SC.AllWebs)
 }
 
 
-$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source ObjectModel -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
+#$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source ObjectModel -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
+$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source CorporateCatalog -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
 
 if ($err -or ($updatedApp -eq $null)) 
 {
@@ -99,6 +100,9 @@ foreach($web in $SC.AllWebs)
     if(!$web.IsAppWeb) {
         Write-Host -ForegroundColor Yellow $web.Url    
         Install-SPApp -Web $web.Url -Identity $updatedApp
+
+
+
     }
 }
 $appInstance = Get-SPAppInstance -Web $SC.Url | where-object {$_.Title -eq $AppName}
@@ -110,9 +114,9 @@ Set-K2WebHomePage -SPWeb $SC.RootWeb -PageUrl "K2DemoPages/OnPremDemoPage.aspx.a
 
 
 $url = $SC.Url +"/_layouts/15/start.aspx#/_layouts/15/AppInv.aspx?Manage=1&AppInstanceId=" + $appInstance.Id +"&Source=" + [System.Web.HttpUtility]::UrlEncode($SC.Url + "/_layouts/15/viewlsts.aspx")
-$ie = New-Object -com internetexplorer.application; 
-$ie.visible = $true; 
-$ie.navigate($url);
+#$ie = New-Object -com internetexplorer.application; 
+#$ie.visible = $true; 
+#$ie.navigate($url);
 
 
 

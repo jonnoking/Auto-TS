@@ -205,7 +205,22 @@ function New-K2SPList {
             $SPWeb.Update();
 
             $lib = $SPWeb.Lists[$Library.Name]
-            $lib.OnQuickLaunch = $true;
+
+            $ListQuickLaunch = $null
+            $ListQuickLaunch = $Library.GetAttribute("QuickLaunch")
+            if ($ListQuickLaunch -ne $null -and $ListQuickLaunch.ToLower() -ne "false") {
+                $lib.OnQuickLaunch = $true
+            }       
+            $lib.Update();
+
+            
+            $ListHidden = $null
+            $ListHidden = $Library.GetAttribute("Hidden")
+            if ($ListHidden -eq $null -or $ListHidden -eq "True") {
+                $lib.Hidden = $true
+            }
+            $ListHidden = $null
+                   
             $lib.Update();
 
             # CUSTOMIZE LIBRARY
