@@ -53,6 +53,8 @@ $SCS = Get-SPWebApplication -Identity $SCUrl
 
 #$SCS = Get-SPSite -Identity $SCUrl
 
+Get-SPAppInstance
+
 # Get App
 $appInstance = Get-SPAppInstance -Web $SCUrl | where-object {$_.Title -eq $AppName}
 if ($err) 
@@ -99,8 +101,23 @@ foreach($web in $SC.AllWebs)
 {
     if(!$web.IsAppWeb) {
         Write-Host -ForegroundColor Yellow $web.Url    
-        Install-SPApp -Web $web.Url -Identity $updatedApp
+        $newAppInstance = Install-SPApp -Web $web.Url -Identity $updatedApp
+                
+         #$AppName = $app.Title;
+        $counter = 1;
+        $maximum = 150;
+        $sleeptime = 2;
+        Write-Host -ForegroundColor White "Progress ." -NoNewline;
+        while (($newAppInstance.Status -eq ([Microsoft.SharePoint.Administration.SPAppInstanceStatus]::Installing)) -and ($counter -lt $maximum))
+        {
+            Write-Host -ForegroundColor White "." -NoNewline;
+            sleep $sleeptime;
+            $counter++;
+            $newAppInstance = Get-SPAppInstance -Web $web | where-object {$_.Title -eq $AppName} 
+        }
+        Write-Host -ForegroundColor White ".";
 
+        Write-Host "App updated successfully";
 
 
     }
