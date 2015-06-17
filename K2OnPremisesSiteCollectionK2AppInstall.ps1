@@ -49,7 +49,7 @@ $newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 S
 
 
 
-$SCS = Get-SPWebApplication -Identity $SCUrl
+#$SCS = Get-SPWebApplication -Identity $SCUrl
 
 #$SCS = Get-SPSite -Identity $SCUrl
 
@@ -86,8 +86,8 @@ foreach($web in $SC.AllWebs)
 }
 
 
-#$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source ObjectModel -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
-$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source CorporateCatalog -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
+$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source ObjectModel -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
+#$updatedApp = Import-SPAppPackage -Path $newPackagePath -Site $SCUrl -Source CorporateCatalog -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
 
 if ($err -or ($updatedApp -eq $null)) 
 {
@@ -117,7 +117,7 @@ foreach($web in $SC.AllWebs)
         }
         Write-Host -ForegroundColor White ".";
 
-        Write-Host "App updated successfully";
+        Write-Host "App installed successfully";
 
 
     }

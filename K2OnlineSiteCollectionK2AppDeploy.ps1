@@ -100,7 +100,7 @@ $Context.ExecuteQuery()
     
     foreach($w in $web.Webs) {
     
-        Add-K2SideLoadApp -SPWeb $web -AppPath $newPackagePath
+        Add-K2SideLoadApp -SPWeb $w -AppPath $newPackagePath
 
         # This doesn't work because the app install hasn't finished by the time this code has been reached. Either loop and wait for app to install or remove
         #Set-K2TrimMenuItem -SPWeb $w -MenuItem "Recent"
