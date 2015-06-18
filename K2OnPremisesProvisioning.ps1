@@ -30,36 +30,47 @@ $SCOwner = $config.Environment.SiteCollection.Owner
 $SCSecondaryOwner = $config.Environment.SiteCollection.SecoondaryOwner
 $SCLanguage = $config.Environment.SiteCollection.Language
 
+$SCExists = $config.Environment.SiteCollection.GetAttribute("Exists").ToLower()
+
 #Check if Site Collection Already exists
 $SPExists = (Get-SPSite $SCUrl -ErrorAction SilentlyContinue) -ne $null
-if ($SPExists)
+if ($SPExists -and $SCExists -ne "true")
 {
-    Write-Host -ForegroundColor Red "Site Collection already exists"
+    Write-Host -ForegroundColor Red "Site Collection already exists and you're configuration file specifies not to overwrite it"
     Remove-SPSite -Identity $SCUrl -GradualDelete -Confirm:$false
     Write-Host -ForegroundColor Red "SCRIPTED HAS STOPPED"
     return
 }
-else
+#else
+#{
+#	Write-Host -ForegroundColor Red "Site Collection does not exist"
+#}
+
+
+# If site collection doesn't exist then create it
+if (!$SPExists)
 {
-	Write-Host -ForegroundColor Red "Site Collection does not exist"
+
+    # CREATE SITE COLLECTION
+    $NewSC = New-SPSite -Url $SCUrl -Name $SCName -Description $SCDescription -OwnerAlias $SCOwner -SecondaryOwnerAlias $SCSecondaryOwner -Template (Get-SPWebTemplate $SCTemplate)
+
+    # Create the Default Groups (Visitor, Member, and Owners)
+    $SCweb = Get-SPWeb $SCUrl
+    $SCweb.CreateDefaultAssociatedGroups($SCOwner, $SCOwner, "")
+    # Enable the OpenInClient feature
+    Enable-SPFeature -Identity OpenInClient -Url $SCUrl
+    # Add Everyone to Members
+    $SCAllUsers = $SCweb.EnsureUser("C:0(.s|true")
+    $SCgroup = $SCweb.SiteGroups.GetByName($SCName+" Members")
+    $SCgroup.AddUser($SCAllUsers)
+    $SCweb.Update()
+
+
+    Write-Host -ForegroundColor Green "Site Collection Created"
+
 }
 
-# CREATE SITE COLLECTION
-$NewSC = New-SPSite -Url $SCUrl -Name $SCName -Description $SCDescription -OwnerAlias $SCOwner -SecondaryOwnerAlias $SCSecondaryOwner -Template (Get-SPWebTemplate $SCTemplate)
 
-# Create the Default Groups (Visitor, Member, and Owners)
-$SCweb = Get-SPWeb $SCUrl
-$SCweb.CreateDefaultAssociatedGroups($SCOwner, $SCOwner, "")
-# Enable the OpenInClient feature
-Enable-SPFeature -Identity OpenInClient -Url $SCUrl
-# Add Everyone to Members
-$SCAllUsers = $SCweb.EnsureUser("C:0(.s|true")
-$SCgroup = $SCweb.SiteGroups.GetByName($SCName+" Members")
-$SCgroup.AddUser($SCAllUsers)
-$SCweb.Update()
-
-
-Write-Host -ForegroundColor Green "Site Collection Created"
 
 $SCS = Get-SPWeb -Identity $SCUrl
 
@@ -69,7 +80,7 @@ $SCLists = $config.SelectNodes("/Environment/SiteCollection/Lists")
 foreach($Library in $SCLists.List) {
     $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
     if ($List -ne $null) {
-            Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+            Write-Host -ForegroundColor Red "List" $Library.Name "already exists. Stepping over."
             continue
     }    
     New-K2SPList -SPWeb $SCS -Library $Library 
@@ -85,7 +96,7 @@ $SCLibraries = $config.SelectNodes("/Environment/SiteCollection/Libraries")
 foreach($Library in $SCLibraries.Library) {    
     $List = Get-K2SPList -SPWeb $SCS -ListName $Library.Name
     if ($List -ne $null) {
-            Write-Host -ForegroundColor Red "Library $Library.Name already exists. Stepping over."
+            Write-Host -ForegroundColor Red "Library" $Library.Name "already exists. Stepping over."
             continue
     }    
     New-K2SPList -SPWeb $SCS -Library $Library 
@@ -130,7 +141,20 @@ $SCSites = $config.SelectNodes("/Environment/SiteCollection/Sites")
 foreach($Site in $SCSites.Site) {
     Write-Host -ForegroundColor Blue "Creating Site " $Site.Name
     $SiteUrl = $SCUrl + "/" + $Site.UrlName
-    $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
+
+    # Check if sub site exists and step over if it does
+    #$SiteExists = (Get-SPWeb $SiteUrl -ErrorAction SilentlyContinue) -ne $null
+    #if($SiteExists) {
+    #    Write-Host -ForegroundColor Red "Site $SiteUrl already exists. Stepping over."
+    #    continue
+    #}
+
+
+    # Get Site - if it doesn't exist then create it
+    $NewSubSite = (Get-SPWeb $SiteUrl -ErrorAction SilentlyContinue) -ne $null
+    if ($NewSubSite -eq $null -or $NewSubSite -eq $false) {
+        $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
+    }
 
 
     # CUSTOMIZE SUB SITE - LISTS
@@ -138,7 +162,7 @@ foreach($Site in $SCSites.Site) {
     foreach($Library in $SCLists.List) {   
         $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
         if ($List -ne $null) {
-                Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+                Write-Host -ForegroundColor Red "List" $Library.Name "already exists. Stepping over."
                 continue
         }    
         New-K2SPList -SPWeb $NewSubSite -Library $Library 
@@ -152,7 +176,7 @@ foreach($Site in $SCSites.Site) {
     foreach($Library in $SCLibraries.Library) {
         $List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
         if ($List -ne $null) {
-                Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+                Write-Host -ForegroundColor Red "Library" $Library.Name "already exists. Stepping over."
                 continue
         }    
         New-K2SPList -SPWeb $NewSubSite -Library $Library 
@@ -166,6 +190,8 @@ foreach($Site in $SCSites.Site) {
     # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING EACH SUB-SITE
     Write-Host -ForegroundColor Blue "Removing quicklaunch navigation from " $Site.Name
     Set-K2TrimMenu -SPWeb $NewSubSite
+
+    
 
 }
 #ENDREGION Create Sites

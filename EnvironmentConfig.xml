@@ -6,7 +6,7 @@
     <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
     <SiteAdminUrl>https://k2loud-admin.sharepoint.com</SiteAdminUrl>
   </Settings>
-  <SiteCollection>
+  <SiteCollection Exists="true">
     <Name>Jonno Tech</Name>
     <UrlName>jonnotech</UrlName>
     <Description>Jonno Tech</Description>
@@ -17,7 +17,7 @@
     <Quota>100</Quota>
     <Image></Image>
     <Lists>
-      <!--<List Hidden="True">
+      <!--<List Hidden="true">
         <Name>K2 Settings</Name>
         <Description>K2 Settings</Description>
         <ListType>GenericList</ListType>
@@ -350,7 +350,7 @@
               </Item>
             </ListData>
           </List>
-          <List QuickLaunch="True">
+          <List QuickLaunch="true">
             <Name>Room Booking</Name>
             <Description>Room Booking</Description>
             <ListType>Events</ListType>
@@ -368,7 +368,7 @@
           </List>
         </Lists>
         <Libraries>
-          <Library QuickLaunch="True">
+          <Library QuickLaunch="true">
             <Name>Vendor Approval</Name>
             <Description>Vendor Approval</Description>
             <ListType>DocumentLibrary</ListType>

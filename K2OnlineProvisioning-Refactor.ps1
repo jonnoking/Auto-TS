@@ -8,15 +8,17 @@ Set-ExecutionPolicy Unrestricted
 Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\ISAPI\Microsoft.SharePoint.Client.dll"     
 Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\ISAPI\Microsoft.SharePoint.Client.Runtime.dll" 
 
+$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
 # ADD CSOM FUNCTIONS
-. .\Development\Auto-TS\CSOMFunctions.ps1
+. $ScriptPath"\CSOMFunctions.ps1"
 
 
 # Load Config
-[xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
+[xml]$config = Get-Content $ScriptPath"\EnvironmentConfigOnline.xml"
 
 
 # Get Base Settings
@@ -41,6 +43,7 @@ $SCSecondaryOwner = $config.Environment.SiteCollection.SecoondaryOwner
 $SCLanguage = $config.Environment.SiteCollection.Language
 $SCQuota = $config.Environment.SiteCollection.Quota
 
+$SCExists = $config.Environment.SiteCollection.GetAttribute("Exists").ToLower()
 
 $AdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $TenantAdmin, $TenantAdminPwdSecure
 Connect-SPOService -Url $BaseAdminUrl -Credential $AdminCreds
@@ -53,11 +56,10 @@ try {
     $SC = Get-SPOSite $SCUrl
     $SPExists = $true;
 } catch {
-    $SPExists = $false;
-    
+    $SPExists = $false;    
 } 
 
-if ($SPExists -ne $null -and $SPExists)
+if (($SPExists -ne $null -and $SPExists) -and $SCExists -ne "true")
 {
     Write-Host -ForegroundColor Red "Site Collection already exists"
 
@@ -67,39 +69,48 @@ if ($SPExists -ne $null -and $SPExists)
 
     return 
 
-} else {
-   Write-Host -ForegroundColor Red "Site Collection doesn't exist"
-}
+} 
+#else 
+#{
+#   Write-Host -ForegroundColor Red "Site Collection doesn't exist"
+#}
 
 
-# CREATE SITE COLLECTION
-# THIS HAS A HABIT OF FAILING. IF IT FAILS THE REST OF THE SCIRPT RUNS BUT NOTHING WORKS. NEEDS BETTER EXCEPTION HANDLING (EVERYWHERE)
-try {
 
-    New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
+# If site collection doesn't exist then create it
+if (!$SPExists)
+{
+    # CREATE SITE COLLECTION
+    # THIS HAS A HABIT OF FAILING. IF IT FAILS THE REST OF THE SCIRPT RUNS BUT NOTHING WORKS. NEEDS BETTER EXCEPTION HANDLING (EVERYWHERE)
+    try {
 
-} catch {
+        New-SPOSite -Url $SCUrl -Title $SCName -Owner $TenantAdmin -Template $SCTemplate -StorageQuota $SCQuota
 
-    Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
-    return
+    } catch {
+
+        Write-Host -ForegroundColor Red "Site Collection failed to create. Stopping"
+        return
     
+    }
+
+    # Enable support to upload custom pages
+    Set-SPOsite -Identity $SCUrl -DenyAddAndCustomizePages $false
+
+
+    # get site collection
+    $SC = Get-SPOSite $SCUrl -Detailed
+
+
+    # Add Everyone to Members group
+    $SCGroupMembers = $SCName + " Members"
+    Add-SPOUser -Site $SC -Group $SCGroupMembers -LoginName "C:0(.s|true"
+
+
+    Write-Host -ForegroundColor Green "Site Collection Created"
 }
-
-# Enable support to upload custom pages
-Set-SPOsite -Identity $SCUrl -DenyAddAndCustomizePages $false
-
-
-# get site collection
-$SC = Get-SPOSite $SCUrl -Detailed
-
-
-# Add Everyone to Members group
-$SCGroupMembers = $SCName + " Members"
-Add-SPOUser -Site $SC -Group $SCGroupMembers -LoginName "C:0(.s|true"
 
 Disconnect-SPOService
 
-Write-Host -ForegroundColor Green "Site Collection Created"
 
 
 $Context = New-Object Microsoft.SharePoint.Client.ClientContext($SCUrl)
@@ -114,7 +125,7 @@ foreach($Library in $SCLists.List) {
     $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
 
     if ($List -ne $null) {
-        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+        Write-Host -ForegroundColor Red "List" $Library.Name "already exists. Stepping over."
         continue
     }
 
@@ -136,7 +147,7 @@ foreach($Library in $SCLibraries.Library) {
     $List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
     
     if ($List -ne $null) {
-        Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+        Write-Host -ForegroundColor Red "Library" $Library.Name "already exists. Stepping over."
         continue
     }
 
@@ -160,7 +171,7 @@ foreach($Library in $SCLibraries.Library) {
 	$List = Get-K2SPList -SPWeb $Context.Web -ListName $Library.Name
 
 	if ($List-eq $null) {
-        Write-Host -ForegroundColor Red "Specified existing library $Library.Name doesn't exist. Stepping over."
+        Write-Host -ForegroundColor Red "Specified existing library" $Library.Name "doesn't exist. Stepping over."
         continue
 	}
 
@@ -177,7 +188,6 @@ Set-K2SPSiteLogo -LongFileName $LongFileName
 
 # REMOVE UNNCESSARY QUICK LAUNCH NAVIGATION - DO AFTER ADDING ALL TOP LEVEL SITE ASSETS
 Set-K2TrimMenu -SPWeb $Context.Web
-
 
 
 
@@ -201,7 +211,7 @@ foreach($Site in $SCSites.Site) {
 		$List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
 
         if ($List -ne $null) {
-            Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+            Write-Host -ForegroundColor Red "List" $Library.Name "already exists. Stepping over."
             continue
         }
 
@@ -222,7 +232,7 @@ foreach($Site in $SCSites.Site) {
 		$List = Get-K2SPList -SPWeb $NewSubSite -ListName $Library.Name
 
         if ($List -ne $null) {
-            Write-Host -ForegroundColor Red "Site $Library.Name already exists. Stepping over."
+            Write-Host -ForegroundColor Red "Library" $Library.Name "already exists. Stepping over."
             continue
         }
 

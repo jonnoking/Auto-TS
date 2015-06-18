@@ -17,7 +17,8 @@
     <Quota>100</Quota>
     <Image></Image>
     <Lists>
-      <List Hidden="True">
+      <!--
+      <List Hidden="true">
         <Name>K2 Settings</Name>
         <Description>K2 Settings</Description>
         <ListType>GenericList</ListType>
@@ -59,7 +60,7 @@
           </Item>
         </ListData>
       </List>
-
+-->
       <List>
         <Name>Customer Tickets</Name>
         <Description>Customer Tickets</Description>
@@ -258,7 +259,7 @@
     </Libraries>
     <Existing>
       <Lists>
-        <List>
+        <!--<List>
           <Name>K2 Settings</Name>
           <ListData>
             <Item>
@@ -294,7 +295,7 @@
               <Field Property="Value">/K2Pages</Field>
             </Item>
           </ListData>
-        </List>
+        </List>-->
       </Lists>
       <Libraries>
         <Library>
@@ -316,7 +317,7 @@
         <Template>STS#0</Template>
         <Language>1033</Language>
         <Lists>
-          <List QuickLaunch="True">
+          <List QuickLaunch="true">
             <Name>Sales Announcements</Name>
             <Description>Sales Announcements</Description>
             <ListType>Announcements</ListType>
@@ -325,7 +326,7 @@
             <ListData>
             </ListData>
           </List>
-          <List QuickLaunch="True">
+          <List QuickLaunch="true">
             <Name>Meeting Room Booking</Name>
             <Description>Meeting Room Booking</Description>
             <ListType>Events</ListType>
@@ -437,7 +438,7 @@
           </List>
         </Lists>
         <Libraries>
-          <Library QuickLaunch="True">
+          <Library QuickLaunch="true">
             <Name>Account Contracts</Name>
             <Description>Account Contracts</Description>
             <ListType>DocumentLibrary</ListType>
@@ -566,7 +567,7 @@
               </Item>
             </ListData>
           </List>
-          <List QuickLaunch="True">
+          <List QuickLaunch="true">
             <Name>Room Booking</Name>
             <Description>Room Booking</Description>
             <ListType>Events</ListType>
@@ -584,7 +585,7 @@
           </List>
         </Lists>
         <Libraries>
-          <Library QuickLaunch="True">
+          <Library QuickLaunch="true">
             <Name>Vendor Approval</Name>
             <Description>Vendor Approval</Description>
             <ListType>DocumentLibrary</ListType>
