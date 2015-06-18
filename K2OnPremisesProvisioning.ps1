@@ -1,6 +1,9 @@
 ﻿# Disable Execution Policy
 Set-ExecutionPolicy Unrestricted
 
+$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+
+
 # Load SP Snapin
 Add-PsSnapin Microsoft.SharePoint.PowerShell -ErrorAction:SilentlyContinue
 
@@ -9,7 +12,7 @@ Add-PsSnapin Microsoft.SharePoint.PowerShell -ErrorAction:SilentlyContinue
 
 
 # Load Config
-[xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfig.xml
+[xml]$config = Get-Content $ScriptPath"\EnvironmentConfig.xml"
 
 
 # Get Base Settings

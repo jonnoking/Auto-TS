@@ -195,7 +195,7 @@
         </CustomFields>
         <ListData>
           <Item>
-            <Field Property="File">C:\Development\Auto-TS\Files\Edge Communications Contract.docx</Field>
+            <Field Property="File">\Files\1 SharePoint\Edge Communications Contract.docx</Field>
             <Field Property="Title">Edge Communications Contract</Field>
             <Field Property="Category">Software</Field>
             <Field Property="Account">Edge Communications</Field>
@@ -206,7 +206,7 @@
             <!--<Field Property="Reviewer" Type="User">jonathan king</Field>-->
           </Item>
           <Item Folder="Contracts">
-            <Field Property="File">C:\Development\Auto-TS\Files\Vendor Contract - Smith.docx</Field>
+            <Field Property="File">\Files\1 SharePoint\Vendor Contract - Smith.docx</Field>
             <Field Property="Title">Smith Contract Contract</Field>
             <Field Property="Category">Software</Field>
             <Field Property="Account">Smith</Field>
@@ -247,10 +247,10 @@
         <CustomFields></CustomFields>
         <ListData>
           <Item>
-            <Field Property="File">C:\Development\Auto-TS\Files\DemoPage1.aspx</Field>
+            <Field Property="File">\Files\3 Configure SharePoint\DemoPage1.aspx</Field>
           </Item>
           <Item>
-            <Field Property="File">C:\Development\Auto-TS\Files\OnPremDemoPage.aspx</Field>
+            <Field Property="File">\Files\3 Configure SharePoint\OnPremDemoPage.aspx</Field>
           </Item>
         </ListData>
       </Library>
@@ -261,7 +261,7 @@
           <Name>Site Assets</Name>
           <ListData>
             <Item>
-              <Field Property="File">C:\Development\Auto-TS\Files\K2-mashup-SP.png</Field>
+              <Field Property="File">\Files\1 SharePoint\K2-mashup-SP.png</Field>
               <Field Property="Title">K2 Appit Site Collection Logo</Field>
             </Item>
           </ListData>
@@ -398,7 +398,7 @@
             </CustomFields>
             <ListData>
               <Item Folder='Edge Communications'>
-                <Field Property="File">C:\Development\Auto-TS\Files\Edge Communications Contract.docx</Field>
+                <Field Property="File">\Files\1 SharePoint\Edge Communications Contract.docx</Field>
                 <Field Property="Title">Edge Communications Contract</Field>
                 <Field Property="Category">Software</Field>
                 <Field Property="Account">Edge Communications</Field>
@@ -408,7 +408,7 @@
                 <Field Property="Region">2</Field>
               </Item>
               <Item Folder="JJK">
-                <Field Property="File">C:\Development\Auto-TS\Files\Vendor Contract - Smith.docx</Field>
+                <Field Property="File">\Files\1 SharePoint\Vendor Contract - Smith.docx</Field>
                 <Field Property="Title">Smith Contract Contract</Field>
                 <Field Property="Category">Software</Field>
                 <Field Property="Account">Smith</Field>

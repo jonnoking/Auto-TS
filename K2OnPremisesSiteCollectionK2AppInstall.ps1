@@ -3,6 +3,7 @@ if ((Get-PSSnapin "Microsoft.SharePoint.PowerShell" -ErrorAction SilentlyContinu
     Add-PSSnapin "Microsoft.SharePoint.PowerShell"
 }
 
+$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
 # Get app from Catalog - Appit or blackpearl
     # If not in catalog - upload from location x - prompt/fail
@@ -13,7 +14,7 @@ if ((Get-PSSnapin "Microsoft.SharePoint.PowerShell" -ErrorAction SilentlyContinu
 
 
 # Load Config
-[xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfig.xml
+[xml]$config = Get-Content $ScriptPath"\EnvironmentConfig.xml"
 
 
 # Get Base Settings
@@ -63,7 +64,7 @@ if ($err)
     throw $err;
 }
 
-if ($false)
+if (0)
 {
 
 
@@ -124,8 +125,14 @@ foreach($web in $SC.AllWebs)
 }
 $appInstance = Get-SPAppInstance -Web $SC.Url | where-object {$_.Title -eq $AppName}
 
-Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Recent"
-Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Subsites"
+#Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Recent"
+#Set-K2TrimMenuItem -SPWeb $SC.RootWeb -MenuItem "Subsites"
+
+foreach($web in $SC.AllWebs)
+{
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Recent"
+    Set-K2TrimMenuItem -SPWeb $web -MenuItem "Subsites"
+}
 
 Set-K2WebHomePage -SPWeb $SC.RootWeb -PageUrl "K2DemoPages/OnPremDemoPage.aspx.aspx"
 
@@ -141,20 +148,6 @@ $url = $SC.Url +"/_layouts/15/start.aspx#/_layouts/15/AppInv.aspx?Manage=1&AppIn
 return 
 
 
-#removes app from site collection and sub sites
-foreach($web in $SC.AllWebs)
-{
-    if(!$web.IsAppWeb) {    
-
-        $appInstance = Get-SPAppInstance -Web $web.Url | where-object {$_.Title -eq $AppName};
-        Uninstall-SPAppInstance –Identity $appInstance -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err;
-        if ($err) 
-        {
-        Write-Host -ForegroundColor White "- An error occured during app uninstallation !";
-        throw $err;
-        }
-    }
-}
 
 
 

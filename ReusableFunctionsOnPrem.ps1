@@ -308,7 +308,7 @@ function Add-K2DocumentsToLibrary {
             }
 
             # Assumes local file
-            $LibFile = $ItemFieldFile.InnerText
+            $LibFile = $ScriptPath + $ItemFieldFile.InnerText
             $File = Get-ChildItem $LibFile
             $LibFileName = $LibFile.Substring($LibFile.LastIndexOf("\")+1) 
                 
