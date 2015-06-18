@@ -15,16 +15,16 @@ installutil -i /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0,
 Add-PSSnapin SourceCode.Deployment.PowerShell
 
 # Get configuration values
-$K2ConnectionString = $config.Packages.Configuration.K2ConnectionString
-$K2Directory = $config.Packages.Configuration.K2Directory
-$K2Server = $config.Packages.Configuration.K2Server
+$K2ConnectionString = $config.Environment.Configuration.K2ConnectionString
+$K2Directory = $config.Environment.Configuration.K2Directory
+$K2Server = $config.Environment.Configuration.K2Server
 
 
 
 # PRE DEPLOY SETPS
 
 # INSTALL SERVICE TYPES
-    $ServiceTypesConfig = $config.Packages.Apps.PreDeploy.ServiceTypes99
+    $ServiceTypesConfig = $config.Environment.PreDeploy.ServiceTypes
 
     foreach($ServiceTypeConfig in $ServiceTypesConfig.ServiceType)
     {
@@ -45,7 +45,7 @@ $K2Server = $config.Packages.Configuration.K2Server
     }
 
 # INSTALL CUSTOM CONTROLS
-    $ControlsConfig = $config.Packages.Apps.PreDeploy.CustomControls
+    $ControlsConfig = $config.Environment.PreDeploy.CustomControls
 
     foreach($ControlConfig in $ControlsConfig.Control)
     {
@@ -53,35 +53,45 @@ $K2Server = $config.Packages.Configuration.K2Server
 
         Write-Host -ForegroundColor Yellow "STARTING: Install of custom control " $ControlName
 
-        #$InstallBatchFile = 'cmd.exe /c '+$ScriptPath+$ControlConfig.InstallBatchFile
+        # need to validate if $ControlConfig.InstallBatchFile is a valid path
 
         $InstallBatchFile = $ScriptPath+$ControlConfig.InstallBatchFile
-
-        #Start-Process $InstallBatchFile
         
         $A = Start-Process -FilePath $InstallBatchFile -Wait -passthru;$a.ExitCode
-
-        #$BatchOut = $InstallBatchFile
 
         Write-Host -ForegroundColor Yellow "FINISHED: Install of custom control " $ControlName
 
     }
 
 
+# COPY FILES - PRE DEPLOY
+
+    $CopiesConfig = $config.Environment.PreDeploy.CopyFiles
+
+    foreach($CopyConfig in $CopiesConfig.Copy)
+    {
+        Set-K2CopyDeploy -CopyConfig $CopyConfig
+    }
 
 
-    # install other pre reqs
+# EXECUTE OTHER POWERSHELL CMDLETS - PRE DEPLOY
+    $PowerShellConfig = $config.Environment.PreDeploy.PowerShell
+
+    foreach($CmdletConfig in $PowerShellConfig.Cmdlet)
+    {
+        Set-K2ExecuteScriptDeploy -CmdletConfig $CmdletConfig
+    }
 
 
+# DEPLOY SHAREPOINT APPS
 
+#### TO DO
 
 
 # DEPLOY NON-SHAREPOINT APPS
-$AppsConfig = $config.Packages.Apps99
+$AppsConfig = $config.Environment.Apps
 foreach($AppConfig in $AppsConfig.App)
 {
-
-
 
     # install K2 kspx apps    
     
@@ -91,9 +101,28 @@ foreach($AppConfig in $AppsConfig.App)
 
     Write-Host -ForegroundColor Green "FINISHED:" ($ScriptPath + $AppConfig.Package) "deployment"
     
-
 }
 
 
 
 # POST DEPLOY STEPS
+
+
+# COPY FILES - POST DEPLOY
+
+    $CopiesConfig = $config.Environment.PostDeploy.CopyFiles
+
+    foreach($CopyConfig in $CopiesConfig.Copy)
+    {
+        Set-K2CopyDeploy -CopyConfig $CopyConfig
+    }
+
+
+# EXECUTE OTHER POWERSHELL CMDLETS - POST DEPLOY
+    $PowerShellConfig = $config.Environment.PostDeploy.PowerShell
+
+    foreach($CmdletConfig in $PowerShellConfig.Cmdlet)
+    {
+        Set-K2ExecuteScriptDeploy -CmdletConfig $CmdletConfig
+    }
+

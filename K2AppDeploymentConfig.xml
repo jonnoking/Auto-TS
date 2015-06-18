@@ -1,46 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Packages>
+<Environment>
   <Configuration>
     <K2Server>k2.denallix.com</K2Server>
     <K2Directory>C:\Program Files (x86)\K2 blackpearl</K2Directory>
     <K2ConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5555</K2ConnectionString>
   </Configuration>
+  <PreDeploy>
+    <ServiceTypes>
+      <ServiceType Name="Bing Maps">
+        <BasePath>\Files\4 K2 Pre Deploy\Bing Service</BasePath>
+        <Dll>K2Field.SmartObjects.Services.BingMaps.dll</Dll>
+        <Name>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Name>
+        <DisplayName>Bing Maps</DisplayName>
+        <Description>Bing Maps</Description>
+        <Class>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Class>
+        <Guid>12312ec4-7878-4772-8a6e-64a137824522</Guid>
+      </ServiceType>
+    </ServiceTypes>
+    <CustomControls>
+      <Control Name="Calendar Control">
+        <BasePath>\Files\4 K2 Pre Deploy\Calendar Control</BasePath>
+        <InstallBatchFile>\Files\4 K2 Pre Deploy\Calendar Control\install.bat</InstallBatchFile>
+      </Control>
+      <Control Name="High Charts">
+        <BasePath>\Files\4 K2 Pre Deploy\High Charts</BasePath>
+        <InstallBatchFile>\Files\4 K2 Pre Deploy\High Charts\RegisterCustomControl.bat</InstallBatchFile>
+      </Control>
+    </CustomControls>
+    <CopyFiles>
+      <Copy Name="Resuable Documents">
+        <Source>\Files\4 K2 Pre Deploy\pre test.ps1</Source>
+        <Destination>c:\k2\test\</Destination>
+      </Copy>
+    </CopyFiles>
+    <PowerShell>
+      <Cmdlet Name="pre test">\Files\4 K2 Pre Deploy\pre test.ps1</Cmdlet>
+    </PowerShell>
+  </PreDeploy>
   <SharePoint>
     <App></App>
   </SharePoint>
   <Apps>
-    <PreDeploy>
-      <ServiceTypes>
-        <ServiceType>
-          <BasePath>\Files\4 K2 Pre Deploy\Bing Service</BasePath>
-          <Dll>K2Field.SmartObjects.Services.BingMaps.dll</Dll>
-          <Name>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Name>
-          <DisplayName>Bing Maps</DisplayName>
-          <Description>Bing Maps</Description>
-          <Class>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Class>
-          <Guid>12312ec4-7878-4772-8a6e-64a137824522</Guid>
-        </ServiceType>
-      </ServiceTypes>
-      <CustomControls>
-        <Control Name="Calendar Control">
-          <BasePath>\Files\4 K2 Pre Deploy\Calendar Control</BasePath>
-          <InstallBatchFile>\Files\4 K2 Pre Deploy\Calendar Control\install.bat</InstallBatchFile>
-        </Control>
-        <Control Name="High Charts">
-          <BasePath>\Files\4 K2 Pre Deploy\High Charts</BasePath>
-          <InstallBatchFile>\Files\4 K2 Pre Deploy\High Charts\RegisterCustomControl.bat</InstallBatchFile>
-        </Control>
-      </CustomControls>
-      <CopyFiles>
-        <Copy>
-          <Source></Source>
-          <Destination></Destination>
-        </Copy>
-      </CopyFiles>
-      <PowerShell>
-        <Cmdlet>blah.ps1</Cmdlet>
-      </PowerShell>
-    </PreDeploy>
 
     <App>
       <Package>\Files\5 K2 Apps\Bing Maps.kspx</Package>
@@ -64,16 +64,16 @@
       <Package>\Files\K2 Application Accelerator - Travel Request v1.0.kspx</Package>
     </App>-->
 
-    <PostDeploy>
-      <CopyFiles>
-        <Copy>
-          <Source></Source>
-          <Destination></Destination>
-        </Copy>
-      </CopyFiles>
-      <PowerShell>
-        <Cmdlet>blah.ps1</Cmdlet>
-      </PowerShell>
-    </PostDeploy>
   </Apps>
-</Packages>
+  <PostDeploy>
+    <CopyFiles>
+      <Copy Name="Resuable Documents">
+        <Source>\Files\6 K2 Post Deploy\post test.ps1</Source>
+        <Destination>c:\k2\test\</Destination>
+      </Copy>
+    </CopyFiles>
+    <PowerShell>
+      <Cmdlet Name="pre test">\Files\6 K2 Post Deploy\post test.ps1</Cmdlet>
+    </PowerShell>
+  </PostDeploy>
+</Environment>

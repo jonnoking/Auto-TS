@@ -131,5 +131,57 @@ function Get-K2SmoManagementServer {
         Write-Output $SmoManagementService
 
     }
+}
 
+function Set-K2CopyDeploy {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        $CopyConfig
+    )
+
+    process {
+
+        $CopyName = $CopyConfig.GetAttribute("Name")
+
+        Write-Host -ForegroundColor Yellow "STARTING: Copying files for" $CopyName
+
+        # need to validate source and destination are valid directories & add error handling
+
+        $CopySource = $ScriptPath+$CopyConfig.Source
+        
+        Copy-Item $CopySource $CopyConfig.Destination
+        
+        Write-Host -ForegroundColor Yellow "FINISHED: Copying files for" $CopyName
+
+    }
+}
+
+
+function Set-K2ExecuteScriptDeploy {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        $CmdletConfig
+    )
+
+    process {
+
+        $CmdletName = $CmdletConfig.GetAttribute("Name")
+
+        Write-Host -ForegroundColor Yellow "STARTING: Execution of PowerShell Cmdlet" $CmdletName
+
+        # need to validate if PS1 or batch file and change execution accordingly
+
+        $CmdletFile = $ScriptPath+$CmdletConfig.'#text'
+
+        Write-Host -ForegroundColor Green $CmdletFile
+
+        &($CmdletFile)
+
+        Write-Host -ForegroundColor Yellow "FINISHED: Execution of PowerShell Cmdlet" $CmdletName
+
+    }
 }
