@@ -4,10 +4,10 @@ Set-ExecutionPolicy Unrestricted
 $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
 
-. $ScriptPath"\2 K2 App Deployment\K2AppDeploymentFunctions.ps1"
+. $ScriptPath"\K2AppDeploymentFunctions.ps1"
 
 # Load Config
-[xml]$config = Get-Content $ScriptPath"\2 K2 App Deployment\K2AppDeploymentConfig.xml"
+[xml]$config = Get-Content $ScriptPath"\K2AppDeploymentConfig.xml"
 
 set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil
 installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL'
@@ -22,7 +22,9 @@ $K2Server = $config.Packages.Configuration.K2Server
 
 
 # PRE DEPLOY SETPS
-    $ServiceTypesConfig = $config.Packages.Apps.PreDeploy.ServiceTypes
+
+# INSTALL SERVICE TYPES
+    $ServiceTypesConfig = $config.Packages.Apps.PreDeploy.ServiceTypes99
 
     foreach($ServiceTypeConfig in $ServiceTypesConfig.ServiceType)
     {
@@ -39,12 +41,34 @@ $K2Server = $config.Packages.Configuration.K2Server
         else 
         {
             New-K2ServiceType -K2ConnectionString $K2ConnectionString -ServiceTypeSystemName $ServiceTypeConfig.Name -ServiceTypeDisplayName $ServiceTypeConfig.DisplayName -ServiceTypeDescription $ServiceTypeConfig.Description -ServiceTypeAssemblyPath $STPath -ServiceTypeClass $ServiceTypeConfig.Class
-        }
+        }        
+    }
 
+# INSTALL CUSTOM CONTROLS
+    $ControlsConfig = $config.Packages.Apps.PreDeploy.CustomControls
 
+    foreach($ControlConfig in $ControlsConfig.Control)
+    {
+        $ControlName = $ControlConfig.GetAttribute("Name")
 
+        Write-Host -ForegroundColor Yellow "STARTING: Install of custom control " $ControlName
+
+        #$InstallBatchFile = 'cmd.exe /c '+$ScriptPath+$ControlConfig.InstallBatchFile
+
+        $InstallBatchFile = $ScriptPath+$ControlConfig.InstallBatchFile
+
+        #Start-Process $InstallBatchFile
+        
+        $A = Start-Process -FilePath $InstallBatchFile -Wait -passthru;$a.ExitCode
+
+        #$BatchOut = $InstallBatchFile
+
+        Write-Host -ForegroundColor Yellow "FINISHED: Install of custom control " $ControlName
 
     }
+
+
+
 
     # install other pre reqs
 
@@ -53,7 +77,7 @@ $K2Server = $config.Packages.Configuration.K2Server
 
 
 # DEPLOY NON-SHAREPOINT APPS
-$AppsConfig = $config.Packages.Apps
+$AppsConfig = $config.Packages.Apps99
 foreach($AppConfig in $AppsConfig.App)
 {
 

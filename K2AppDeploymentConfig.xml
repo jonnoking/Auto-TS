@@ -22,7 +22,14 @@
         </ServiceType>
       </ServiceTypes>
       <CustomControls>
-
+        <Control Name="Calendar Control">
+          <BasePath>\Files\4 K2 Pre Deploy\Calendar Control</BasePath>
+          <InstallBatchFile>\Files\4 K2 Pre Deploy\Calendar Control\install.bat</InstallBatchFile>
+        </Control>
+        <Control Name="High Charts">
+          <BasePath>\Files\4 K2 Pre Deploy\High Charts</BasePath>
+          <InstallBatchFile>\Files\4 K2 Pre Deploy\High Charts\RegisterCustomControl.bat</InstallBatchFile>
+        </Control>
       </CustomControls>
       <CopyFiles>
         <Copy>
