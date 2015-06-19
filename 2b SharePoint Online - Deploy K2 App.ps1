@@ -11,11 +11,14 @@ Add-Type -Path "c:\Program Files\Common Files\microsoft shared\Web Server Extens
 # Import Modules
 Import-Module Microsoft.Online.SharePoint.PowerShell -DisableNameChecking
 
+$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+
+
 # ADD CSOM FUNCTIONS
-. .\Development\Auto-TS\CSOMFunctions.ps1
+. $ScriptPath"\2z SharePoint Online - Functions.ps1"
 
 # Load Config
-[xml]$config = Get-Content C:\Development\Auto-TS\EnvironmentConfigOnline.xml
+[xml]$config = Get-Content $ScriptPath"\2 SharePoint Online - Config.xml"
 
 
 # Get Base Settings

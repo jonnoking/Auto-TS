@@ -5,16 +5,8 @@ if ((Get-PSSnapin "Microsoft.SharePoint.PowerShell" -ErrorAction SilentlyContinu
 
 $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
-# Get app from Catalog - Appit or blackpearl
-    # If not in catalog - upload from location x - prompt/fail
-# Import package
-# recurse through sites and install app
-
-# launch browser for config - have to go to app permissions to TRUST the app - this will then take you to reg settings
-
-
 # Load Config
-[xml]$config = Get-Content $ScriptPath"\EnvironmentConfig.xml"
+[xml]$config = Get-Content $ScriptPath"\1 SharePoint On-Premises - Config.xml"
 
 
 # Get Base Settings
@@ -54,7 +46,7 @@ $newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 S
 
 #$SCS = Get-SPSite -Identity $SCUrl
 
-Get-SPAppInstance
+
 
 # Get App
 $appInstance = Get-SPAppInstance -Web $SCUrl | where-object {$_.Title -eq $AppName}

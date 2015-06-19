@@ -4,10 +4,10 @@ Set-ExecutionPolicy Unrestricted
 $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
 
-. $ScriptPath"\K2AppDeploymentFunctions.ps1"
+. $ScriptPath"\3z K2 On-Premises Apps - Functions.ps1"
 
 # Load Config
-[xml]$config = Get-Content $ScriptPath"\K2AppDeploymentConfig.xml"
+[xml]$config = Get-Content $ScriptPath"\3 K2 On-Premises Apps - Config.xml"
 
 set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil
 installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL'
@@ -28,19 +28,19 @@ $K2Server = $config.Environment.Configuration.K2Server
 
     foreach($ServiceTypeConfig in $ServiceTypesConfig.ServiceType)
     {
-        $STCopyPath = $ServiceTypeConfig.BasePath + "\*"
+        $STCopyPath = $ScriptPath+$ServiceTypeConfig.BasePath + "\*"
         $K2ServiceBrokerDir = $K2Directory + "\ServiceBroker"
         Copy-Item $STCopyPath $K2ServiceBrokerDir
 
-        $STPath = $ServiceTypeConfig.BasePath + "\" + $ServiceTypeConfig.Dll
+        $STPath = $ScriptPath+$ServiceTypeConfig.BasePath + "\" + $ServiceTypeConfig.Dll
 
         if ($ServiceTypeConfig.Guid -ne $null -or $ServiceTypeConfig.Guid -ne "") 
         {
-            New-K2ServiceType -K2ConnectionString $K2ConnectionString -ServiceTypeSystemName $ServiceTypeConfig.Name -ServiceTypeDisplayName $ServiceTypeConfig.DisplayName -ServiceTypeDescription $ServiceTypeConfig.Description -ServiceTypeAssemblyPath $STPath -ServiceTypeClass $ServiceTypeConfig.Class -ServiceTypeGuid $ServiceTypeConfig.Guid
+            New-K2ServiceType -K2ConnectionString $K2ConnectionString -ServiceTypeSystemName $ServiceTypeConfig.SystemName -ServiceTypeDisplayName $ServiceTypeConfig.DisplayName -ServiceTypeDescription $ServiceTypeConfig.Description -ServiceTypeAssemblyPath $STPath -ServiceTypeClass $ServiceTypeConfig.Class -ServiceTypeGuid $ServiceTypeConfig.Guid
         } 
         else 
         {
-            New-K2ServiceType -K2ConnectionString $K2ConnectionString -ServiceTypeSystemName $ServiceTypeConfig.Name -ServiceTypeDisplayName $ServiceTypeConfig.DisplayName -ServiceTypeDescription $ServiceTypeConfig.Description -ServiceTypeAssemblyPath $STPath -ServiceTypeClass $ServiceTypeConfig.Class
+            New-K2ServiceType -K2ConnectionString $K2ConnectionString -ServiceTypeSystemName $ServiceTypeConfig.SystemName -ServiceTypeDisplayName $ServiceTypeConfig.DisplayName -ServiceTypeDescription $ServiceTypeConfig.Description -ServiceTypeAssemblyPath $STPath -ServiceTypeClass $ServiceTypeConfig.Class
         }        
     }
 

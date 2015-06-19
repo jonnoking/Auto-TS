@@ -1,39 +1,4 @@
-﻿# From Ruben
-Function RegisterServiceType([string]$k2ConnectionString, [string]$k2Server, [string] $AssemblyP) {
-    # Get Paths for local environment and for the remote machine, we might run this installer from a simple windows 7 host, while we deploy to a server that has a different drive...
-    $k2Path = "C:\Program Files (x86)\K2 blackpearl\"
-    $remK2Path = "C:\Program Files (x86)\K2 blackpearl\"
-
-    $smoManServiceAssembly = Join-Path $k2Path "bin\SourceCode.SmartObjects.Services.Management.dll"
-    $serviceBrokerAssembly = Join-Path $remK2Path "ServiceBroker\K2Field.custom.servicebroker.dll"
-    
-    $guid = [guid]"b12806f6-585d-aaaa-8fff-5710f97f039c" # Guid is hard-coded, no need to have this configurable.
-
-    Write-Debug "Adding/Updating ServiceType $serviceBrokerAssembly with guid $guid using $k2ConnectionString"
-    
-    Add-Type -Path $smoManServiceAssembly # we load this assembly locally, but we connect to the remote host.
-    $smoManService = New-Object SourceCode.SmartObjects.Services.Management.ServiceManagementServer
-
-    #Create connection and capture output (methods return a bool)
-    $tmpOut = $smoManService.CreateConnection()
-    $tmpOut = $smoManService.Connection.Open($k2ConnectionString);
-    Write-Debug "Connected to K2 host server"
-
-    # Check if we need to update or register a new one...
-    if ([string]::IsNullOrEmpty($smoManService.GetServiceType($guid)) ) {
-        Write-Debug "Registering new service type..."
-        $tmpOut = $smoManService.RegisterServiceType($guid, " K2Field.custom.servicebroker", "Custom", "Custom Service Broker", $serviceBrokerAssembly, " K2Field.custom.servicebroker");
-        write-debug "Registered new service type..."
-    } else {
-        Write-Debug "Updating service type..."
-        $tmpOut = $smoManService.UpdateServiceType($guid, " K2Field.custom.servicebroker", "Custom", "Custom Service Broker", $serviceBrokerAssembly, " K2Field.custom.servicebroker ");
-        Write-Debug "Updated service type..."
-    }
-    $smoManService.Connection.Close();
-    write-host "Deployed service-type"
-}
-
-function RefreshInstance()
+﻿function RefreshManagementInstance()
 {
 
 

@@ -10,7 +10,7 @@
       <ServiceType Name="Bing Maps">
         <BasePath>\Files\4 K2 Pre Deploy\Bing Service</BasePath>
         <Dll>K2Field.SmartObjects.Services.BingMaps.dll</Dll>
-        <Name>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Name>
+        <SystemName>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</SystemName>
         <DisplayName>Bing Maps</DisplayName>
         <Description>Bing Maps</Description>
         <Class>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Class>
