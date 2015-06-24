@@ -126,10 +126,21 @@ foreach($web in $SC.AllWebs)
     Set-K2TrimMenuItem -SPWeb $web -MenuItem "Subsites"
 }
 
-Set-K2WebHomePage -SPWeb $SC.RootWeb -PageUrl "K2DemoPages/OnPremDemoPage.aspx.aspx"
 
 
-$url = $SC.Url +"/_layouts/15/start.aspx#/_layouts/15/AppInv.aspx?Manage=1&AppInstanceId=" + $appInstance.Id +"&Source=" + [System.Web.HttpUtility]::UrlEncode($SC.Url + "/_layouts/15/viewlsts.aspx")
+
+
+    # Run the Internal App State Update timer job to force update is available UI
+#    Get-SPTimerJob -Identity job-internalspapp-statequery | Start-SPTimerJob
+
+
+
+#Set-K2WebHomePage -SPWeb $SC.RootWeb -PageUrl "K2DemoPages/OnPremDemoPage.aspx.aspx"
+
+
+
+
+#$url = $SC.Url +"/_layouts/15/start.aspx#/_layouts/15/AppInv.aspx?Manage=1&AppInstanceId=" + $appInstance.Id +"&Source=" + [System.Web.HttpUtility]::UrlEncode($SC.Url + "/_layouts/15/viewlsts.aspx")
 #$ie = New-Object -com internetexplorer.application; 
 #$ie.visible = $true; 
 #$ie.navigate($url);

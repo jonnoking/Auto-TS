@@ -266,6 +266,17 @@
             </Item>
           </ListData>
         </Library>
+        <Library>
+          <Name>Site Pages</Name>
+          <ListData>
+            <Item>
+              <Field Property="File">\Files\3 Configure SharePoint\jonno1.aspx</Field>
+            </Item>
+            <Item>
+              <Field Property="File">\Files\3 Configure SharePoint\jonno2.aspx</Field>
+            </Item>
+          </ListData>
+        </Library>
       </Libraries>
     </Existing>
     <Sites>
