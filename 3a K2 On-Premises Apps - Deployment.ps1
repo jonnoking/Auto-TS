@@ -30,6 +30,10 @@ $k2InstallDir = $config.Environment.Configuration.K2Directory
 #New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\CODI" -RoleMemberType "user"
 New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users" -RoleMemberType "group"
 
+Get-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
+
+Delete-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
+
 return
 
 

@@ -241,6 +241,116 @@ function New-K2RoleMember {
 }
 
 
+function Delete-K2RoleMember {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Role,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$RoleMember
+    )
+
+    process {
+
+        $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
+
+
+        $K2Role = $RoleManagementService.GetRole($Role)
+
+        Write-Host -ForegroundColor Yellow "STARTING: Removing member from role" $K2Role.Name                
+
+        $FoundMemberInclude = $null
+        foreach($Member in $K2Role.Include)
+        {
+            if ($Member.Name.ToLower() -eq $RoleMember.ToLower()) {
+                $FoundMemberInclude = $Member
+                break
+            }
+        }
+
+        if ($FoundMemberInclude -ne $null) {
+            $K2Role.Include.Remove($FoundMemberInclude)
+        }
+
+        $FoundMemberExclude = $null
+        foreach($Member in $K2Role.Exclude) {
+            if ($Member.Name.ToLower() -eq $RoleMember.ToLower()) {
+                $FoundMemberExclude = $Member
+                break
+            }
+        }
+
+        if ($FoundMemberExclude -ne $null) {
+            $K2Role.Exclude.Remove($FoundMemberExclude)
+        }
+
+        $K2Role.ExpiryDate = [System.DateTime]::Now
+
+        $RoleManagementService.UpdateRole($K2Role)
+
+
+        Write-Host -ForegroundColor Green "FINISHED: Removing member from role" $Role
+    
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
+
+    }
+}
+
+function Get-K2RoleMember {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Role,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$RoleMember
+    )
+
+    process {
+
+        $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
+
+        $K2Role = $RoleManagementService.GetRole($Role)
+
+        Write-Host -ForegroundColor Yellow "STARTING: Get Role Member from role" $K2Role.Name                
+
+        $FoundMember = $null
+
+        foreach ($Member in $K2Role.Include) {
+            if ($Member.Name.ToLower() -eq $RoleMember.ToLower()) {
+                $FoundMember = "include"
+                break
+            }
+        }
+
+        foreach ($Member in $K2Role.Exclude) {
+            if ($Member.Name.ToLower() -eq $RoleMember.ToLower()) {
+                $FoundMember = "exclude"
+                break
+            }
+        }
+
+
+        Write-Host -ForegroundColor Green "FINISHED: Get Role Member from role" $Role
+    
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
+
+        Write-Output $FoundMember
+
+    }
+}
+
+
+
 function Get-K2WorkflowManagementServer {
     [CmdletBinding()]
 
