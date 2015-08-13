@@ -174,6 +174,109 @@ function Get-K2RoleManagementServer {
     }
 }
 
+function New-K2Role {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Name,        
+        [Parameter(Mandatory=$false,Position=2)]
+        [string]$Description,        
+        [Parameter(Mandatory=$false,Position=3)]
+        [bool]$IsDynamic,        
+        [Parameter(Mandatory=$false,Position=4)]
+        [int]$RefreshInterval        
+    )
+
+    process {
+
+        Write-Host -ForegroundColor Yellow "STARTING: Creating Role " $Name                
+
+        $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
+
+        $K2Role = $null
+        
+        $K2Role = $RoleManagementService.GetRole($Role)
+
+        if ($K2Role -eq $null) {
+
+            # K2 Role doesn't already exists
+            $K2Role = New-Object SourceCode.Security.UserRoleManager.Management.Role
+
+            $K2Role.Name = $Name
+            $K2Role.Description = $Description
+            $K2Role.IsDynamic = $IsDynamic
+
+            if ($RefreshInterval > 0) {
+                $K2Role.Interval = $RefreshInterval
+            }
+
+            $RoleManagementService.CreateRole($K2Role)
+
+        } 
+#        else 
+#        {
+#            $K2Role.Description = $Description
+#            $K2Role.IsDynamic = $IsDynamic
+#            if ($RefreshInterval > 0) {
+#                $K2Role.Interval = $RefreshInterval
+#            }
+#            $RoleManagementService.UpdateRole($K2Role)
+#        }
+
+        Write-Host -ForegroundColor Green "FINISHED: Creating Role " $Name
+    
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
+    }
+}
+
+function Get-K2RoleExists {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Name,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$RoleMember,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$RoleMemberType,
+        [Parameter(Mandatory=$false,Position=4)]
+        [string]$IncludeExclude
+    )
+
+    process {
+
+        Write-Host -ForegroundColor Green "STARTING: Check if Role Exists " $Name
+        
+        $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
+
+
+        $K2Role = $null
+        
+        $K2Role = $RoleManagementService.GetRole($Role)
+
+
+        Write-Host -ForegroundColor Green "FINISHED: Check if Role Exists " $Name
+    
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+
+        if ($K2Role -eq $null) {
+            Write-Output $false
+        } else {
+            Write-Output $true
+        }
+
+    }
+
+}
+
 
 function New-K2RoleMember {
     [CmdletBinding()]

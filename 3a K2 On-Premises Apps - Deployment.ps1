@@ -8,6 +8,7 @@ $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
 # Load Config
 [xml]$config = Get-Content $ScriptPath"\3 K2 On-Premises Apps - Config.xml"
+#[xml]$config = Get-Content $ScriptPath"\99 K2 On-Premises Try Now - Config.xml"
 
 set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil
 installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL'
@@ -28,13 +29,13 @@ $k2InstallDir = $config.Environment.Configuration.K2Directory
 #New-K2WorkflowGroupPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -GroupFQN "K2:DENALLIX\Domain Users" -Admin $true -Start $false -View $false -ViewParticipate $false -ServerEvent $false
 
 #New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\CODI" -RoleMemberType "user"
-New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users" -RoleMemberType "group"
+#New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users" -RoleMemberType "group"
 
-Get-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
+#Get-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
 
-Delete-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
+#Delete-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users"
 
-return
+#return
 
 
 # PRE DEPLOY SETPS
@@ -122,6 +123,42 @@ foreach($AppConfig in $AppsConfig.App)
 
 
 # POST DEPLOY STEPS
+
+
+# CONFIGURE WORKFLOWS
+$WorkflowConfig = $config.Environment.PostDeploy.WorkflowConfig
+foreach($Workflow in $WorkflowConfig.Workflow)
+{    
+    foreach($WorkflowPermission in $Workflow.ProcessRights) 
+    {
+        if($WorkflowPermission.Type.ToLower() -eq "group")
+        {
+            New-K2WorkflowGroupPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow $Workflow.Name -GroupFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
+        }
+        else
+        {
+            New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow $Workflow.Name -UserFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
+        }
+    }
+}
+
+# CONFIGURE ROLES
+$RolesConfig = $config.Environment.PostDeploy.Roles
+foreach($Role in $RolesConfig.Role)
+{
+    # Create Role if it doesn't exist - if role already exists nothing will happen
+    New-K2Role -Name $Role.Name
+
+    foreach($Include in $Role.Include)
+    {
+        New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role $Role.Name -RoleMember $Include.FQN -RoleMemberType $Include.Type -IncludeExclude "include"
+    }
+
+    foreach($Exclude in $Role.Exclude)
+    {
+        New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role $Role.Name -RoleMember $Exclude.FQN -RoleMemberType $Exclude.Type -IncludeExclude "exclude"
+    }
+}
 
 
 # COPY FILES - POST DEPLOY

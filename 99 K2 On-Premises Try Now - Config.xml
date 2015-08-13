@@ -7,17 +7,6 @@
     <K2WorkflowConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5252</K2WorkflowConnectionString>
   </Configuration>
   <PreDeploy>
-    <ServiceTypes>
-      <ServiceType Name="Bing Maps">
-        <BasePath>\Files\4 K2 Pre Deploy\Bing Service</BasePath>
-        <Dll>K2Field.SmartObjects.Services.BingMaps.dll</Dll>
-        <SystemName>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</SystemName>
-        <DisplayName>Bing Maps</DisplayName>
-        <Description>Bing Maps</Description>
-        <Class>K2Field.SmartObjects.Services.BingMaps.ServiceBroker</Class>
-        <Guid>12312ec4-7878-4772-8a6e-64a137824522</Guid>
-      </ServiceType>
-    </ServiceTypes>
     <CustomControls>
       <Control Name="Calendar Control">
         <BasePath>\Files\4 K2 Pre Deploy\Calendar Control</BasePath>
@@ -44,9 +33,6 @@
   <Apps>
 
     <App>
-      <Package>\Files\5 K2 Apps\Bing Maps.kspx</Package>
-    </App>
-    <!--<App>
       <Package>\Files\K2 Application Accelerator - Ad Hoc Tasks v1.0.kspx</Package>
     </App>
     <App>
@@ -63,17 +49,32 @@
     </App>
     <App>
       <Package>\Files\K2 Application Accelerator - Travel Request v1.0.kspx</Package>
-    </App>-->
+    </App>
+    <App>
+      <Package>\Files\K2 Workdesk 2.1 for Application Accelerators.kspx</Package>
+    </App>
 
   </Apps>
   <PostDeploy>
 		<WorkflowConfig>
 			<Workflow Name="Workflow\Leave Request Approval">
-				<ProcessRights FQN="K2:DENALLIX\ADMINISTRATOR" Type="[group|user]" Admin="[true|false]" Start="[true|false]" View="[true|false]" ViewParticipate="[true|false]" ServerEvent="[true|false]"/>
+				<ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
 			</Workflow>
-		</WorkflowConfig>
+      <Workflow Name="Workflow\Leave Request Approval">
+        <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
+      </Workflow>
+      <Workflow Name="Workflow\Leave Request Approval">
+        <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
+      </Workflow>
+      <Workflow Name="Workflow\Leave Request Approval">
+        <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
+      </Workflow>
+      <Workflow Name="Workflow\Leave Request Approval">
+        <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
+      </Workflow>
+    </WorkflowConfig>
     <Roles>
-      <Role Name="Role Name">
+      <Role Name="HR">
         <Include FQN="" Type="[group|user]"/>
         <Exclude FQN="" Type="[group|user]"/>
       </Role>
