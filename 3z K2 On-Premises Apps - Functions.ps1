@@ -4,8 +4,8 @@
 
         ##  Refresh ServiceInstance
         #  Load SourceCode.SmartObjects.Services.Management assembly
-        Add-Type -Path ($k2InstallDir + "Bin\SourceCode.HostClientAPI.dll")
-        Add-Type -Path ($k2InstallDir + "Bin\SourceCode.SmartObjects.Services.Management.dll")
+        Add-Type -Path ($k2InstallDir + "\Bin\SourceCode.HostClientAPI.dll")
+        Add-Type -Path ($k2InstallDir + "\Bin\SourceCode.SmartObjects.Services.Management.dll")
 
         #  Create connection string
         $connBuilder = New-Object SourceCode.Hosting.Client.BaseAPI.SCConnectionStringBuilder
@@ -86,7 +86,7 @@ function Get-K2SmoManagementServer {
     )
 
     process {
-        Add-Type -Path ("C:\Program Files (x86)\K2 blackpearl\Bin\SourceCode.SmartObjects.Services.Management.dll")
+        Add-Type -Path ($k2InstallDir + "\Bin\SourceCode.SmartObjects.Services.Management.dll")
         $SmoManagementService = New-Object SourceCode.SmartObjects.Services.Management.ServiceManagementServer
 
         #Create connection and capture output (methods return a bool)
@@ -148,5 +148,287 @@ function Set-K2ExecuteScriptDeploy {
 
         Write-Host -ForegroundColor Yellow "FINISHED: Execution of PowerShell Cmdlet" $CmdletName
 
+    }
+}
+
+
+
+function Get-K2RoleManagementServer {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString
+    )
+
+    process {
+        Add-Type -Path ($k2InstallDir + "\Bin\SourceCode.Security.UserRoleManager.Management.dll")
+        $RoleManagementService = New-Object SourceCode.Security.UserRoleManager.Management.UserRoleManager
+
+        #Create connection and capture output (methods return a bool)
+        $tmpOut = $RoleManagementService.CreateConnection()
+        $tmpOut = $RoleManagementService.Connection.Open($K2ConnectionString);
+
+        Write-Output $RoleManagementService
+
+    }
+}
+
+
+function New-K2RoleMember {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2ConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Role,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$RoleMember,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$RoleMemberType
+    )
+
+    process {
+        $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
+
+
+        $K2Role = $RoleManagementService.GetRole($Role)
+
+        Write-Host -ForegroundColor Yellow "STARTING: Adding member to role" $K2Role.Name                
+
+        $RoleItem = $null
+
+        switch($RoleMemberType.ToLower())
+        {
+            "user" 
+                {
+                    $NewItem = New-Object SourceCode.Security.UserRoleManager.Management.UserItem
+                    $NewItem.Name = $RoleMember.ToUpper()
+                    $RoleItem = $NewItem
+                }
+            "group"
+                {
+                    $NewItem = New-Object SourceCode.Security.UserRoleManager.Management.GroupItem
+                    $NewItem.Name = $RoleMember.ToUpper()
+                    $RoleItem = $NewItem
+                }
+        }
+
+        $K2Role.Include.Add($RoleItem)
+
+        $K2Role.ExpiryDate = [System.DateTime]::Now
+
+        $RoleManagementService.UpdateRole($K2Role)
+
+
+        Write-Host -ForegroundColor Green "FINISHED: Adding member to role" $Role
+    
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
+    }
+}
+
+
+function Get-K2WorkflowManagementServer {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2WorkflowConnectionString
+    )
+
+    process {
+        Add-Type -Path ($k2InstallDir + "\Bin\SourceCode.Workflow.Management.dll")
+        $WFManagementService = New-Object SourceCode.Workflow.Management.WorkflowManagementServer
+
+        #Create connection and capture output (methods return a bool)
+        $tmpOut = $WFManagementService.CreateConnection()
+        $tmpOut = $WFManagementService.Connection.Open($K2WorkflowConnectionString);
+
+        Write-Output $WFManagementService
+    }
+}
+
+
+function New-K2WorkflowUserPermission {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2WorkflowConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Workflow,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$UserFQN,
+        [Parameter(Mandatory=$true,Position=3)]
+        [bool]$Admin,
+        [Parameter(Mandatory=$true,Position=4)]
+        [bool]$Start,
+        [Parameter(Mandatory=$true,Position=5)]
+        [bool]$View,
+        [Parameter(Mandatory=$true,Position=6)]
+        [bool]$ViewParticipate,
+        [Parameter(Mandatory=$true,Position=7)]
+        [bool]$ServerEvent
+
+    )
+
+    process {
+        $WFManagementService = Get-K2WorkflowManagementServer -K2WorkflowConnectionString $K2WorkflowConnectionString
+        
+
+        $ProcSet = $WFManagementService.GetProcSet($Workflow);
+
+        $Process = $WFManagementService.GetProcess($ProcSet.ProcID);
+
+        Write-Host -ForegroundColor Yellow "STARTING: Adding user permissions to workflow:" $Process.FullName               
+
+        #$Filter = New-Object SourceCode.Workflow.Management.Criteria.ProcSetPermissionsCriteriaFilter
+        $CurrentPermissions = $WFManagementService.GetProcessUserPermissions($Process.ProcSetID);
+
+
+        $ExistingPermissions = $null
+
+        $CurrentPermissions | foreach {            
+            
+            if ($_.UserName = $UserFQN)
+            {
+                $ExistingPermissions = $_         
+            }
+
+        }
+
+        if ($ExistingPermissions -ne $null)
+        {
+            #Update existing permission
+
+            $ExistingPermissions.Admin = $Admin
+            $ExistingPermissions.Start = $Start
+            $ExistingPermissions.View = $View
+            $ExistingPermissions.ViewPart = $ViewParticipate
+            $ExistingPermissions.ServerEvent = $ServerEvent
+
+        }
+        else 
+        {
+            #Create new permissions
+            
+            $ExistingPermissions = New-Object SourceCode.Workflow.Management.ProcSetPermissions            
+            $ExistingPermissions.UserName = $UserFQN.ToUpper()
+            $ExistingPermissions.ProcessFullName = $Process.FullName
+            $ExistingPermissions.ProcSetID = $Process.ProcSetID
+            $ExistingPermissions.Admin = $Admin
+            $ExistingPermissions.Start = $Start
+            $ExistingPermissions.View = $View
+            $ExistingPermissions.ViewPart = $ViewParticipate
+            $ExistingPermissions.ServerEvent = $ServerEvent
+
+        }
+        
+        $CurrentPermissions.Add($ExistingPermissions)
+
+        $WFManagementService.UpdateProcUserPermissions($Process.ProcSetID, $CurrentPermissions)
+
+        Write-Host -ForegroundColor Green "FINISHED: Adding permissions to workflow: " $CurrentPermissions.Count
+    
+        $WFManagementService.Connection.Close();
+        $WFManagementService = $null
+        $Process = $null
+        $ProcSet = $null
+        $ExistingPermissions = $null
+        $CurrentPermissions = $null
+    }
+}
+
+
+function New-K2WorkflowGroupPermission {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$K2WorkflowConnectionString,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$Workflow,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$GroupFQN,
+        [Parameter(Mandatory=$true,Position=3)]
+        [bool]$Admin,
+        [Parameter(Mandatory=$true,Position=4)]
+        [bool]$Start,
+        [Parameter(Mandatory=$true,Position=5)]
+        [bool]$View,
+        [Parameter(Mandatory=$true,Position=6)]
+        [bool]$ViewParticipate,
+        [Parameter(Mandatory=$true,Position=7)]
+        [bool]$ServerEvent
+
+    )
+
+    process {
+        $WFManagementService = Get-K2WorkflowManagementServer -K2WorkflowConnectionString $K2WorkflowConnectionString
+        
+
+        $ProcSet = $WFManagementService.GetProcSet($Workflow);
+
+        $Process = $WFManagementService.GetProcess($ProcSet.ProcID);
+
+        Write-Host -ForegroundColor Yellow "STARTING: Adding user permissions to workflow:" $Process.FullName               
+
+        #$Filter = New-Object SourceCode.Workflow.Management.Criteria.ProcSetPermissionsCriteriaFilter
+        $CurrentPermissions = $WFManagementService.GetProcessGroupPermissions($Process.ProcSetID);
+
+
+        $ExistingPermissions = $null
+
+        $CurrentPermissions | foreach {            
+            
+            if ($_.UserName = $GroupFQN)
+            {
+                $ExistingPermissions = $_         
+            }
+
+        }
+
+        if ($ExistingPermissions -ne $null)
+        {
+            #Update existing permission
+
+            $ExistingPermissions.Admin = $Admin
+            $ExistingPermissions.Start = $Start
+            $ExistingPermissions.View = $View
+            $ExistingPermissions.ViewPart = $ViewParticipate
+            $ExistingPermissions.ServerEvent = $ServerEvent
+
+        }
+        else 
+        {
+            #Create new permissions
+            
+            $ExistingPermissions = New-Object SourceCode.Workflow.Management.ProcSetPermissions            
+            $ExistingPermissions.UserName = $GroupFQN.ToUpper()
+            $ExistingPermissions.ProcessFullName = $Process.FullName
+            $ExistingPermissions.ProcSetID = $Process.ProcSetID
+            $ExistingPermissions.Admin = $Admin
+            $ExistingPermissions.Start = $Start
+            $ExistingPermissions.View = $View
+            $ExistingPermissions.ViewPart = $ViewParticipate
+            $ExistingPermissions.ServerEvent = $ServerEvent
+
+        }
+        
+        $CurrentPermissions.Add($ExistingPermissions)
+
+        $WFManagementService.UpdateProcGroupPermissions($Process.ProcSetID, $CurrentPermissions)
+
+        Write-Host -ForegroundColor Green "FINISHED: Adding permissions to workflow: " $CurrentPermissions.Count
+    
+        $WFManagementService.Connection.Close();
+        $WFManagementService = $null
+        $Process = $null
+        $ProcSet = $null
+        $ExistingPermissions = $null
+        $CurrentPermissions = $null
     }
 }

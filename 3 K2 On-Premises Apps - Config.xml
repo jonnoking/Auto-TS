@@ -3,7 +3,8 @@
   <Configuration>
     <K2Server>k2.denallix.com</K2Server>
     <K2Directory>C:\Program Files (x86)\K2 blackpearl</K2Directory>
-    <K2ConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5555</K2ConnectionString>
+    <K2HostServerConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5555</K2HostServerConnectionString>
+    <K2WorkflowConnectionString>Integrated=True;IsPrimaryLogin=True;Authenticate=True;EncryptedPassword=False;Host=localhost;Port=5252</K2WorkflowConnectionString>
   </Configuration>
   <PreDeploy>
     <ServiceTypes>
