@@ -186,10 +186,16 @@ function New-K2RoleMember {
         [Parameter(Mandatory=$true,Position=2)]
         [string]$RoleMember,
         [Parameter(Mandatory=$true,Position=3)]
-        [string]$RoleMemberType
+        [string]$RoleMemberType,
+        [Parameter(Mandatory=$false,Position=4)]
+        [string]$IncludeExclude
     )
 
     process {
+        if ($IncludeExclude -eq "") {
+            $IncludeExclude = "include"
+        }
+
         $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
 
 
@@ -215,7 +221,11 @@ function New-K2RoleMember {
                 }
         }
 
-        $K2Role.Include.Add($RoleItem)
+        if ($IncludeExclude.ToLower() -eq "include") {
+            $K2Role.Include.Add($RoleItem)
+        } else {
+            $K2Role.Exclude.Add($RoleItem)
+        }
 
         $K2Role.ExpiryDate = [System.DateTime]::Now
 
@@ -329,9 +339,9 @@ function New-K2WorkflowUserPermission {
         
         $CurrentPermissions.Add($ExistingPermissions)
 
-        $WFManagementService.UpdateProcUserPermissions($Process.ProcSetID, $CurrentPermissions)
+        $WFManagementService.UpdateOrAddProcUserPermissions($Process.ProcSetID, $CurrentPermissions)
 
-        Write-Host -ForegroundColor Green "FINISHED: Adding permissions to workflow: " $CurrentPermissions.Count
+        Write-Host -ForegroundColor Green "FINISHED: Adding user permissions to workflow: " $CurrentPermissions.Count
     
         $WFManagementService.Connection.Close();
         $WFManagementService = $null
@@ -374,7 +384,7 @@ function New-K2WorkflowGroupPermission {
 
         $Process = $WFManagementService.GetProcess($ProcSet.ProcID);
 
-        Write-Host -ForegroundColor Yellow "STARTING: Adding user permissions to workflow:" $Process.FullName               
+        Write-Host -ForegroundColor Yellow "STARTING: Adding group permissions to workflow:" $Process.FullName               
 
         #$Filter = New-Object SourceCode.Workflow.Management.Criteria.ProcSetPermissionsCriteriaFilter
         $CurrentPermissions = $WFManagementService.GetProcessGroupPermissions($Process.ProcSetID);
@@ -407,7 +417,7 @@ function New-K2WorkflowGroupPermission {
             #Create new permissions
             
             $ExistingPermissions = New-Object SourceCode.Workflow.Management.ProcSetPermissions            
-            $ExistingPermissions.UserName = $GroupFQN.ToUpper()
+            $ExistingPermissions.GroupName = $GroupFQN.ToUpper()
             $ExistingPermissions.ProcessFullName = $Process.FullName
             $ExistingPermissions.ProcSetID = $Process.ProcSetID
             $ExistingPermissions.Admin = $Admin
@@ -422,7 +432,7 @@ function New-K2WorkflowGroupPermission {
 
         $WFManagementService.UpdateProcGroupPermissions($Process.ProcSetID, $CurrentPermissions)
 
-        Write-Host -ForegroundColor Green "FINISHED: Adding permissions to workflow: " $CurrentPermissions.Count
+        Write-Host -ForegroundColor Green "FINISHED: Adding group permissions to workflow: " $CurrentPermissions.Count
     
         $WFManagementService.Connection.Close();
         $WFManagementService = $null

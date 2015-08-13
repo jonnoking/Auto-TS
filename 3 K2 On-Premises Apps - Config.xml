@@ -67,6 +67,17 @@
 
   </Apps>
   <PostDeploy>
+		<WorkflowConfig>
+			<Workflow Name="Workflow\Leave Request Approval">
+				<ProcessRights Type="[group|user]" Admin="[true|false]" Start="[true|false]" View="[true|false]" ViewParticipate="[true|false]" ServerEvent="[true|false]"/>
+			</Workflow>
+			<Roles>
+				<Role Name="Role Name">
+					<Include FQN="" Type="[group|user]"/>
+					<Exclude FQN="" Type="[group|user]"/>
+				</Role>
+			</Roles>
+		</WorkflowConfig>
     <CopyFiles>
       <Copy Name="Resuable Documents">
         <Source>\Files\6 K2 Post Deploy\post test.ps1</Source>

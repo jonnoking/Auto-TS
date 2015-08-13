@@ -23,12 +23,12 @@ $k2InstallDir = $config.Environment.Configuration.K2Directory
 
 
 
-New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\CODI" -Admin $false -Start $true -View $false -ViewParticipate $false -ServerEvent $false
-New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\JONNO" -Admin $true -Start $true -View $false -ViewParticipate $false -ServerEvent $false
-New-K2WorkflowGroupPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -GroupFQN "K2:DENALLIX\ADMINISTRATORS" -Admin $true -Start $false -View $false -ViewParticipate $false -ServerEvent $false
+#New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\CODI" -Admin $false -Start $true -View $false -ViewParticipate $false -ServerEvent $false
+#New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\JONNO" -Admin $true -Start $true -View $false -ViewParticipate $false -ServerEvent $false
+#New-K2WorkflowGroupPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -GroupFQN "K2:DENALLIX\Domain Users" -Admin $true -Start $false -View $false -ViewParticipate $false -ServerEvent $false
 
-
-# New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\jonno" -RoleMemberType "user"
+#New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\CODI" -RoleMemberType "user"
+New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role "HR" -RoleMember "K2:denallix\Domain Users" -RoleMemberType "group"
 
 return
 
