@@ -23,6 +23,8 @@ $K2Server = $config.Environment.Configuration.K2Server
 $k2InstallDir = $config.Environment.Configuration.K2Directory
 
 
+Set-K2SmOSPLoadPackage -SiteUrl "https://portal.denallix.com/denallix-bellevue" -SiteName "Denallix-Bellevue" -ListName "Leave Approval" -ListId "15afa672-15e1-4fc0-b410-84d7ef54285e" -PackagePath "C:\K2\SharePoint Apps\K2 Application Accelerator - Leave Request v1.1.kspx"
+return
 
 #New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\CODI" -Admin $false -Start $true -View $false -ViewParticipate $false -ServerEvent $false
 #New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\JONNO" -Admin $true -Start $true -View $false -ViewParticipate $false -ServerEvent $false
