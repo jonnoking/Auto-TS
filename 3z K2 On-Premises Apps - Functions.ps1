@@ -84,6 +84,57 @@ function Get-K2SmoClient {
     }
 }
 
+
+
+#[List Method] 1. SharePoint_Integration_Workflow_Helper_Methods.LoadPackage(string siteUrl, string siteName, string listName string ListId, file packageFile) -> string Result (which will be the session name and required for all future methods)
+#[List Method] 2. SharePoint_Integration_Workflow_Helper_Methods.RefactorSharepointArtifacts(string Result(session name), string siteUrl, string siteName, string listName string ListId) -> String Result
+#[List Method] 3. SharePoint_Integration_Workflow_Helper_Methods.RefactorModel(string Result(session name), string siteUrl, string siteName, string listName string ListId) -> String Result
+#[Scalar Method] [TAKES ALONG TIME] 4. SharePoint_Integration_Workflow_Helper_Methods.AutoResolve(string Result(session name), string siteUrl, string siteName, string listName string ListId) -> String Result
+#[List Method] 5. SharePoint_Integration_Workflow_Helper_Methods.DeployPackage(string Result(session name)) -> String Result, String ConflictMessage(if there are any)
+#[CAT: Package and Deployment - Progress - Get Progress] 6. Progress.GetProgress(string sessionName, “Deploy”) -> int NumberOfItemsProcessed, int TotalNumberOfItemsToProcess
+#7. [Optional] File_Handler.DownloadDeploymentLog(string sessionName, “.log”) -> File DeploymentLog
+
+
+#0 Deploy SP Package
+function Set-K2SmOSPLoadPackage {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SiteUrl,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$SiteName,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$ListName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$ListId,
+        [Parameter(Mandatory=$true,Position=4)]
+        [string]$PackagePath
+    )
+
+    process {
+
+        $SessionName = Set-K2SmOSPLoadPackage -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -PackagePath $PackagePath
+        Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        Set-K2SmODeployPackage -SessionName $SessionName        
+
+        # Deploy package is asynchronous - need to call Get-K2SmOSPCheckDeploymentStatus to check status
+        # Post deployment success need to call Get-K2SmOSPCloseDeploymentSession to close deployment session
+
+        Write-Output $SessionName
+
+    }
+    END
+    {
+        
+
+    }
+}
+
+
+#1
 function Set-K2SmOSPLoadPackage {
     [CmdletBinding()]
 
@@ -105,7 +156,7 @@ function Set-K2SmOSPLoadPackage {
         # Get Package as Base64
         $PackageFilename = [System.IO.Path]::GetFileName($PackagePath)
         $PackageBase64 = Get-Base64Document -FilePath $PackagePath
-        $PackageSmartFileXml = Get-K2SmoFileProperty -Name "PackageFile" -DisplayName "Package File" -Filename $PackageFilename -Base64 $PackageBase64
+        #$PackageSmartFileXml = Get-K2SmoFileProperty -Name "PackageFile" -DisplayName "Package File" -Filename $PackageFilename -Base64 $PackageBase64
 
         $SmoClient = Get-K2SmoClient        
 
@@ -140,6 +191,310 @@ function Set-K2SmOSPLoadPackage {
         }
 
         Write-Output $SessionName
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#2
+function Set-K2SmOSPRefactorSharepointArtifacts {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SiteUrl,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$SiteName,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$ListName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$ListId,
+        [Parameter(Mandatory=$true,Position=4)]
+        [string]$SessionName
+    )
+
+    process {
+    
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePoint_Integration_Workflow_Helper_Methods")
+
+        $SPHelperSmo.ListMethods["RefactorSharePointArtifacts"].InputProperties["k2_Int_Result"].Value = $SessionName;
+        $SPHelperSmo.ListMethods["RefactorSharePointArtifacts"].InputProperties["SiteUrl"].Value = $SiteUrl;
+        $SPHelperSmo.ListMethods["RefactorSharePointArtifacts"].InputProperties["SiteName"].Value = $SiteName;
+        $SPHelperSmo.ListMethods["RefactorSharePointArtifacts"].InputProperties["ListName"].Value = $ListName;
+        $SPHelperSmo.ListMethods["RefactorSharePointArtifacts"].InputProperties["ListId"].Value = $ListId;
+        $SPHelperSmo.MethodToExecute = "RefactorSharePointArtifacts"
+
+        $LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+
+        foreach ($Result in $LoadPackageList)
+        {
+            $LoadPackageResultSmo = $Result
+            break
+        }
+
+        $SessionName = $LoadPackageResultSmo.Properties["k2_Int_Result"].Value;
+
+        if ($SessionName -eq "") {
+            #FAIL
+        }
+
+        Write-Output $SessionName
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#3 - almost exactly the same as RefactorSharePointArtifacts
+function Set-K2SmOSPRefactorModel {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SiteUrl,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$SiteName,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$ListName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$ListId,
+        [Parameter(Mandatory=$true,Position=4)]
+        [string]$SessionName
+    )
+
+    process {
+      
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePoint_Integration_Workflow_Helper_Methods")
+
+        $SPHelperSmo.ListMethods["RefactorModel"].InputProperties["k2_Int_Result"].Value = $SessionName;
+        $SPHelperSmo.ListMethods["RefactorModel"].InputProperties["SiteUrl"].Value = $SiteUrl;
+        $SPHelperSmo.ListMethods["RefactorModel"].InputProperties["SiteName"].Value = $SiteName;
+        $SPHelperSmo.ListMethods["RefactorModel"].InputProperties["ListName"].Value = $ListName;
+        $SPHelperSmo.ListMethods["RefactorModel"].InputProperties["ListId"].Value = $ListId;
+        $SPHelperSmo.MethodToExecute = "RefactorModel"
+
+        $LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+
+        foreach ($Result in $LoadPackageList)
+        {
+            $LoadPackageResultSmo = $Result
+            break
+        }
+
+        $SessionName = $LoadPackageResultSmo.Properties["k2_Int_Result"].Value;
+
+        if ($SessionName -eq "") {
+            #FAIL
+        }
+
+        Write-Output $SessionName
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#4
+function Set-K2SmOSPAutoResolve {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SiteUrl,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$SiteName,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$ListName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$ListId,
+        [Parameter(Mandatory=$true,Position=4)]
+        [string]$SessionName
+    )
+
+    process {
+       
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePoint_Integration_Workflow_Helper_Methods")
+
+        $SPHelperSmo.Methods["AutoResolve"].InputProperties["k2_Int_Result"].Value = $SessionName;
+        $SPHelperSmo.Methods["AutoResolve"].InputProperties["SiteUrl"].Value = $SiteUrl;
+        $SPHelperSmo.Methods["AutoResolve"].InputProperties["SiteName"].Value = $SiteName;
+        $SPHelperSmo.Methods["AutoResolve"].InputProperties["ListName"].Value = $ListName;
+        $SPHelperSmo.Methods["AutoResolve"].InputProperties["ListId"].Value = $ListId;
+        $SPHelperSmo.MethodToExecute = "AutoResolve"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+        $SessionName = $LoadPackageResultSmo.Properties["k2_Int_Result"].Value;
+
+        if ($SessionName -eq "") {
+            #FAIL
+        }
+
+        Write-Output $SessionName
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#5
+function Set-K2SmODeployPackage {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SessionName
+    )
+
+    process {
+
+        
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePoint_Integration_Workflow_Helper_Methods")
+
+        $SPHelperSmo.ListMethods["DeployPackage"].InputProperties["k2_Int_Result"].Value = $SessionName;
+
+        $SPHelperSmo.MethodToExecute = "DeployPackage"
+
+        $LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+
+        foreach ($Result in $LoadPackageList)
+        {
+            $LoadPackageResultSmo = $Result
+            break
+        }
+
+        $SessionName = $LoadPackageResultSmo.Properties["k2_Int_Result"].Value;
+
+        if ($SessionName -eq "") {
+            #FAIL
+        }
+
+        Write-Output $SessionName
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#6
+function Get-K2SmOSPCheckDeploymentStatus {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SessionName
+    )
+
+    process {
+
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("Progress")
+
+        $SPHelperSmo.Methods["GetProgress"].InputProperties["SessionName"].Value = $SessionName;
+        $SPHelperSmo.Methods["GetProgress"].InputProperties["Type"].Value = "Deploy";
+        $SPHelperSmo.MethodToExecute = "GetProgress"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+        $NumberOfItemsProcessed = $LoadPackageResultSmo.Properties["NumberOfItemsProcessed"].Value;
+
+        if ($SessionName -eq "") {
+            #FAIL
+        }
+
+        Write-Output $NumberOfItemsProcessed
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+#7
+function Get-K2SmOSPCloseDeploymentSession {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SessionName
+    )
+
+    process {
+
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("Session_PackagingDeploymentService")
+
+        $SPHelperSmo.Methods["Close"].InputProperties["Name"].Value = $SessionName;
+        $SPHelperSmo.MethodToExecute = "Close"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $LoadPackageResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+        #$NumberOfItemsProcessed = $LoadPackageResultSmo.Properties["NumberOfItemsProcessed"].Value;
+
+        #if ($SessionName -eq "") {
+            #FAIL
+        #}
+
+        #Write-Output $NumberOfItemsProcessed
 
     }
     END
