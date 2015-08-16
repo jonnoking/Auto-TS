@@ -504,6 +504,200 @@ function Get-K2SmOSPCloseDeploymentSession {
     }
 }
 
+#####
+##### DELETE ALL K2 ARTIFACTS FROM LIST/LIBRARY
+
+#1 - GET ID - SharePoint Integration Setting.LoadWithoutId(ListId) Returns Id Guid
+#2 - RESET - SharePoint Integration Setting.Rest(Id) - DOESN'T ACTUALLY DELETE THE K2 ASSETS
+
+
+#<brokerpackage><smartobject name="portal_denallix_com_Management_Event" guid="16311fe7-7df0-4256-a46a-5aecb3c16132" version="9" resultname=""><property name="ListId"><value>eecc5ac4-99a6-4e05-94a2-e7781b3df8de</value></property><property name="K2_Int_SubSiteRelativeUrl"><value>/denallix-bellevue</value></property><property name="RemoteReceiverTypes"><value>10001;</value></property><method name="RemoveSpecificEvents" /></smartobject></brokerpackage>
+#<brokerpackage><smartobject name="SharePoint_Integration_Workflow" guid="30db085b-ed82-44da-812c-8ebefcd0141c" version="2" resultname=""><property name="WorkflowName"><value>Denallix-Bellevue Test Cal\Test Cal</value></property><property name="ListId"><value>eecc5ac4-99a6-4e05-94a2-e7781b3df8de</value></property><property name="DeleteRemoteEvents"><value>True</value></property><property name="SiteURL"><value>https://portal.denallix.com/denallix-bellevue</value></property><method name="Delete" /></smartobject></brokerpackage>
+#<brokerpackage><smartobject name="SharePoint_Integration_Workflow_Helper_Methods" guid="f343a8d0-c7c6-4ad1-b72d-07ed5b568c46" version="2" resultname=""><property name="K2_Int_SiteUrl"><value>https://portal.denallix.com/denallix-bellevue</value></property><property name="IsDocLib"><value>false</value></property><property name="CategoryId"><value>30272</value></property><property name="IncludeReportForms"><value>true</value></property><method name="GetFormsPerCategoryAsCurrentUser" /></smartobject></brokerpackage>
+#<brokerpackage><smartobject name="portal_denallix_com_Management_K2Application" guid="ff8f872a-27de-4055-9197-bdc521eb5ef0" version="10" resultname=""><property name="ListId"><value>eecc5ac4-99a6-4e05-94a2-e7781b3df8de</value></property><property name="K2_Int_SubSiteRelativeUrl"><value>/denallix-bellevue</value></property><method name="ResetListFormsUrl" /></smartobject></brokerpackage>
+#<brokerpackage><smartobject name="SharePointIntegrationSetting_SharePoint_Integration" guid="6fd53e9f-021b-4e2e-bffa-809021bbbe5e" version="2" resultname=""><property name="Id"><value>8292dfb0-e891-4500-a486-7414c5e2460e</value></property><method name="Reset" /></smartobject></brokerpackage>
+   
+
+##### 
+# TO DO - delete Event Receivers, delete workflows, delete forms & views
+
+
+#0
+function SET-K2SPRemoveK2ArtifactsFromList {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$ListId
+    )
+
+    process {
+
+
+        $K2ArtifactsResultSmo = Get-K2SmOSPGetK2ArtifactsId -ListId $ListId
+        $ArtifactId = $K2ArtifactsResultSmo.Properties["Id"].Value;
+
+        Set-K2SmOSPRemoveK2Artifacts -Id $ArtifactId
+
+        Write-Output $true
+
+    }
+    END
+    {
+        
+    }
+}
+
+
+#1
+function Get-K2SmOSPGetK2ArtifactsId {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$ListId
+    )
+
+    process {
+
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePointIntegrationSetting_SharePoint_Integration")
+
+        $SPHelperSmo.Methods["LoadWithoutId"].InputProperties["ListId"].Value = $ListId;
+        $SPHelperSmo.MethodToExecute = "LoadWithoutId"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $K2ArtifactsResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+        $ArtifactId = $K2ArtifactsResultSmo.Properties["Id"].Value;
+
+        #if ($ArtifactId -eq "") {
+            #FAIL
+        #}
+
+        Write-Output $K2ArtifactsResultSmo
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#2 - DOESN'T ACTUALLY DELETE THE K2 ASSETS
+function Set-K2SmOSPRemoveK2Artifacts {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$Id
+    )
+
+    process {
+
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePointIntegrationSetting_SharePoint_Integration")
+
+        $SPHelperSmo.Methods["Reset"].InputProperties["Id"].Value = $Id;
+        $SPHelperSmo.MethodToExecute = "Reset"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $RestResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+
+        #if ($SessionName -eq "") {
+            #FAIL
+        #}
+
+        #Write-Output $ArtifactId
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+#####
+
+
+#####
+##### GENERATE K2 Assets for a List - Works
+function Set-K2SmOSPGenerateK2ArtifactsOnList {
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true,Position=0)]
+        [string]$SiteUrl,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$SiteName,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$ListName,
+        [Parameter(Mandatory=$true,Position=3)]
+        [string]$ListId,
+        [Parameter(Mandatory=$true,Position=4)]
+        [string]$SourceUrl,
+        [Parameter(Mandatory=$true,Position=5)]
+        [bool]$GenerateSmartForms,
+        [Parameter(Mandatory=$true,Position=6)]
+        [bool]$SetFormsUrl,
+        [Parameter(Mandatory=$true,Position=7)]
+        [bool]$GenerateReports
+    )
+
+    process {
+
+        $SmoClient = Get-K2SmoClient        
+
+        $SPHelperSmo = New-Object SourceCode.SmartObjects.Client.SmartObject
+
+        $SPHelperSmo = $SmoClient.GetSmartObject("SharePoint_Integration_Workflow_Helper_Methods")
+
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["K2_Int_SiteUrl"].Value = $SiteUrl;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["K2_Int_SiteTitle"].Value = $SiteName;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["K2_Int_ListId"].Value = $ListId;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["K2_Int_ListTitle"].Value = $ListName;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["K2_Int_SourceUrl"].Value = $SourceUrl;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["k2_Int_LinkSmOScope"].Value = "List/Library";
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["k2_Int_GenerateSmartForms"].Value = $GenerateSmartForms;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["k2_Int_SetFormsUrl"].Value = $SetFormsUrl;
+        $SPHelperSmo.Methods["GenerateArtifactsForSharePointList"].InputProperties["k2_Int_GenerateReports"].Value = $GenerateReports;
+        $SPHelperSmo.MethodToExecute = "GenerateArtifactsForSharePointList"
+
+        #$LoadPackageList = $SmoClient.ExecuteList($SPHelperSmo).SmartObjectsList
+
+        $RestResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
+
+
+        #if ($SessionName -eq "") {
+            #FAIL
+        #}
+
+        #Write-Output $ArtifactId
+
+    }
+    END
+    {
+        $SmoClient.Connection.Close()
+
+    }
+}
+
+
+
+
 
 function Get-K2SmoFileProperty {
     [CmdletBinding()]

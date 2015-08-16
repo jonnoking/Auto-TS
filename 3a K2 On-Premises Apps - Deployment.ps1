@@ -27,7 +27,12 @@ $SiteName = "Denallix-Bellevue"
 $ListName = "Leave Approval"
 $ListId = "15afa672-15e1-4fc0-b410-84d7ef54285e"
 $PackagePath = "C:\K2\SharePoint Apps\K2 Application Accelerator - Leave Request v1.1.kspx"
+$SourceUrl = "https://portal.denallix.com/denallix-bellevue/Lists/Leave%20Approval/calendar.aspx"
 
+# WORKS
+Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SourceUrl $SourceUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
+return
+#SET-K2SPRemoveK2ArtifactsFromList -ListId "eecc5ac4-99a6-4e05-94a2-e7781b3df8de"
 
 
 $SessionName = Set-K2SmOSPLoadPackage -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -PackagePath $PackagePath
@@ -35,15 +40,11 @@ $SessionName = Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteNam
 $SessionName = Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
 $SessionName = Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
 Set-K2SmODeployPackage -SessionName $SessionName
-Get-K2SmOSPCheckStatus -SessionName $SessionName
+Get-K2SmOSPCheckDeploymentStatus -SessionName $SessionName
 
 #check status
 # need logic to keep checking
 # need a way to determing when the deployment has actually finished
-
-
-# Session.Close()
-#Get-K2SmOSPCloseDeploymentSession -SessionName "Denallix-Bellevue_Leave Approval"
 
 
 
