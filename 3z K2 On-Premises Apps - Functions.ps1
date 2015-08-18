@@ -115,13 +115,16 @@ function Deploy-K2SharePointPackage {
     process {
 
         $SessionName = Set-K2SmOSPLoadPackage -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -PackagePath $PackagePath
-        Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-        Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-        Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-        Set-K2SmODeployPackage -SessionName $SessionName        
+        $s1 = Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        $s1 = Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        $s1 = Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+        $s1 = Set-K2SmODeployPackage -SessionName $SessionName        
 
         # Deploy package is asynchronous - need to call Get-K2SmOSPCheckDeploymentStatus to check status
         # Post deployment success need to call Get-K2SmOSPCloseDeploymentSession to close deployment session
+
+        
+
 
         Write-Output $SessionName
 
@@ -196,6 +199,7 @@ function Set-K2SmOSPLoadPackage {
     END
     {
         $SmoClient.Connection.Close()
+        $SmoClient = $null
 
     }
 }
@@ -256,7 +260,7 @@ function Set-K2SmOSPRefactorSharepointArtifacts {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -316,7 +320,7 @@ function Set-K2SmOSPRefactorModel {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -369,7 +373,7 @@ function Set-K2SmOSPAutoResolve {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -419,7 +423,7 @@ function Set-K2SmODeployPackage {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -449,23 +453,25 @@ function Get-K2SmOSPCheckDeploymentStatus {
 
         $LoadPackageResultSmo = $SmoClient.ExecuteScalar($SPHelperSmo)        
 
-        $NumberOfItemsProcessed = $LoadPackageResultSmo.Properties["NumberOfItemsProcessed"].Value;
+        $NumberOfItemsProcessed = [int]$LoadPackageResultSmo.Properties["NumberOfItemsProcessed"].Value;
+        $TotalNumberOfItems = [int]$LoadPackageResultSmo.Properties["TotalNumberOfItemsToProcess"].Value;
 
-        if ($SessionName -eq "") {
-            #FAIL
+        if ($NumberOfItemsProcessed -lt $TotalNumberOfItems) {
+            Write-Output "DEPLOYING"
+        } else {
+            Write-Output "DEPLOYED"
         }
 
-        Write-Output $NumberOfItemsProcessed
 
     }
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 #7
-function Get-K2SmOSPCloseDeploymentSession {
+function Close-K2SmOSPDeploymentSession {
     [CmdletBinding()]
 
     param(
@@ -500,7 +506,7 @@ function Get-K2SmOSPCloseDeploymentSession {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -585,7 +591,7 @@ function Get-K2SmOSPGetK2ArtifactsId {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -625,7 +631,7 @@ function Set-K2SmOSPRemoveK2Artifacts {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -650,11 +656,11 @@ function Set-K2SmOSPGenerateK2ArtifactsOnList {
         [Parameter(Mandatory=$true,Position=4)]
         [string]$SourceUrl,
         [Parameter(Mandatory=$true,Position=5)]
-        [bool]$GenerateSmartForms,
+        [string]$GenerateSmartForms,
         [Parameter(Mandatory=$true,Position=6)]
-        [bool]$SetFormsUrl,
+        [string]$SetFormsUrl,
         [Parameter(Mandatory=$true,Position=7)]
-        [bool]$GenerateReports
+        [string]$GenerateReports
     )
 
     process {
@@ -691,7 +697,7 @@ function Set-K2SmOSPGenerateK2ArtifactsOnList {
     END
     {
         $SmoClient.Connection.Close()
-
+        $SmoClient = $null
     }
 }
 
@@ -848,6 +854,7 @@ function RefreshManagementInstance()
         Finally
         {
           $managementServer.Connection.Dispose()
+          $managementServer = $null
         }
 
 }
@@ -893,7 +900,11 @@ function New-K2ServiceType {
 
         Write-Host -ForegroundColor Green "FINISHED: Registering service type" $ServiceTypeDisplayName
     
+    }
+    END
+    {
         $SmoManagementService.Connection.Close();
+        $SmoManagementService = $null
     }
 
 }
@@ -1088,6 +1099,9 @@ function New-K2Role {
 
         Write-Host -ForegroundColor Green "FINISHED: Creating Role " $Name
     
+    }
+    END
+    {
         $RoleManagementService.Connection.Close();
         $RoleManagementService = $null
         $K2Role = $null
@@ -1128,8 +1142,6 @@ function Get-K2RoleExists {
 
         Write-Host -ForegroundColor Green "FINISHED: Check if Role Exists " $Name
     
-        $RoleManagementService.Connection.Close();
-        $RoleManagementService = $null
 
         if ($K2Role -eq $null) {
             Write-Output $false
@@ -1138,7 +1150,12 @@ function Get-K2RoleExists {
         }
 
     }
-
+    END
+    {
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
+    }
 }
 
 
@@ -1213,6 +1230,9 @@ function New-K2RoleMember {
 
         Write-Host -ForegroundColor Green "FINISHED: Adding member to role" $Role
     
+    }
+    END
+    {
         $RoleManagementService.Connection.Close();
         $RoleManagementService = $null
         $K2Role = $null
@@ -1276,11 +1296,14 @@ function Delete-K2RoleMember {
 
 
         Write-Host -ForegroundColor Green "FINISHED: Removing member from role" $Role
-    
+
+
+    }
+    END
+    {
         $RoleManagementService.Connection.Close();
         $RoleManagementService = $null
         $K2Role = $null
-
     }
 }
 
@@ -1327,12 +1350,15 @@ function Get-K2RoleMember {
 
         Write-Host -ForegroundColor Green "FINISHED: Get Role Member from role" $Role
     
-        $RoleManagementService.Connection.Close();
-        $RoleManagementService = $null
-        $K2Role = $null
 
         Write-Output $FoundMember
 
+    }
+    END
+    {
+        $RoleManagementService.Connection.Close();
+        $RoleManagementService = $null
+        $K2Role = $null
     }
 }
 
@@ -1451,7 +1477,10 @@ function New-K2WorkflowUserPermission {
         $WFManagementService.UpdateOrAddProcUserPermissions($Process.ProcSetID, $CurrentPermissions)
 
         Write-Host -ForegroundColor Green "FINISHED: Adding user permissions to workflow: " $CurrentPermissions.Count
-    
+
+    }
+    END
+    {
         $WFManagementService.Connection.Close();
         $WFManagementService = $null
         $Process = $null
@@ -1548,11 +1577,15 @@ function New-K2WorkflowGroupPermission {
 
         Write-Host -ForegroundColor Green "FINISHED: Adding group permissions to workflow: " $CurrentPermissions.Count
     
+    }
+    END
+    {
         $WFManagementService.Connection.Close();
         $WFManagementService = $null
         $Process = $null
         $ProcSet = $null
         $ExistingPermissions = $null
         $CurrentPermissions = $null
+
     }
 }

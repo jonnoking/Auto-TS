@@ -5,6 +5,7 @@ $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 
 
 . $ScriptPath"\3z K2 On-Premises Apps - Functions.ps1"
+. $ScriptPath"\1z SharePoint On-Premises - Functions.ps1"
 
 # Load Config
 #[xml]$config = Get-Content $ScriptPath"\3 K2 On-Premises Apps - Config.xml"
@@ -28,6 +29,8 @@ $ListName = "Leave Approval"
 $ListId = "15afa672-15e1-4fc0-b410-84d7ef54285e"
 $PackagePath = "C:\K2\SharePoint Apps\K2 Application Accelerator - Leave Request v1.1.kspx"
 $SourceUrl = "https://portal.denallix.com/denallix-bellevue/Lists/Leave%20Approval/calendar.aspx"
+
+
 
 # WORKS
 #Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SourceUrl $SourceUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
@@ -146,6 +149,11 @@ foreach($SPAppConfig in $SharePointAppsConfig.App)
         continue
     }
 
+    [string]$SPWebName = $SPWeb.Name
+    if($SPWebName -eq "" -or $SPWebName -eq $null) {
+        $SPWebName = $SPAppConfig.SiteUrl.Replace("https://", "").Replace("http://", "").Replace("/", "_").Replace(".", "_")
+    }
+
     # Check if list exists - create if defined
     $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
 
@@ -174,12 +182,12 @@ foreach($SPAppConfig in $SharePointAppsConfig.App)
 
     $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
 
-    if ($SPAppConfig.Action.ToLower() -eq "appify") {
+    if ($SPAppConfig.Action.InnerText.ToLower() -eq "appify") {
         $SrcUrl = $SPAppConfig.BaseUrl + $List.DefaultViewUrl
-        Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWeb.Name -ListName $SPAppConfig.ListName -ListId $List.ID -SourceUrl $SrcUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
+        Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWebName -ListName $SPAppConfig.ListName -ListId $List.ID -SourceUrl $SrcUrl -GenerateSmartForms $SPAppConfig.Action.GenerateSmartForms -SetFormsUrl $SPAppConfig.Action.GenerateSmartForms -GenerateReports $SPAppConfig.Action.GenerateReports
     }
 
-    if ($SPAppConfig.Action.ToLower() -eq "deploy") {
+    if ($SPAppConfig.Action.InnerText.ToLower() -eq "deploy") {
 
         $PackagePath = $ScriptPath+$SPAppConfig.Package
 
@@ -187,7 +195,33 @@ foreach($SPAppConfig in $SharePointAppsConfig.App)
 
         }
 
-        Deploy-K2SharePointPackage -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWeb.Name -ListName $SPAppConfig.ListName -ListId $List.ID -PackagePath $PackagePath
+        $SessionName = Deploy-K2SharePointPackage -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWebName -ListName $SPAppConfig.ListName -ListId $List.ID -PackagePath $PackagePath
+    
+    
+        $counter = 1;
+        $maximum = 10;
+        $sleeptime = 30;
+        [bool]$IsDeployed = $false;
+        Write-Host -ForegroundColor White "Deploying." -NoNewline;
+        while ($IsDeployed -eq $false -and ($counter -lt $maximum))
+        {
+            Write-Host -ForegroundColor White "." -NoNewline;
+            sleep $sleeptime;
+            $counter++;
+
+            $DeployStatus = Get-K2SmOSPCheckDeploymentStatus -SessionName $SessionName
+            if ($DeployStatus -eq "DEPLOYED") {
+                $IsDeployed = $true
+            }            
+
+        }
+        
+        if ($IsDeployed -eq $true) {
+            Write-Host ""
+            Close-K2SmOSPDeploymentSession -SessionName $SessionName
+            Write-Host -ForegroundColor White "Deployment session " $SessionName " is closed" 
+        }    
+    
     }
 
     Write-Host -ForegroundColor Green "FINISHED: K2 SharePoint apps or Appify lists and libraries"
