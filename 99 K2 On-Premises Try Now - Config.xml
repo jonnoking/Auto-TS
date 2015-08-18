@@ -8,85 +8,132 @@
   </Configuration>
   <PreDeploy>
     <CustomControls>
-      <Control Name="Calendar Control">
+      <!--<Control Name="Calendar Control">
         <BasePath>\Files\4 K2 Pre Deploy\Calendar Control</BasePath>
         <InstallBatchFile>\Files\4 K2 Pre Deploy\Calendar Control\install.bat</InstallBatchFile>
-      </Control>
-      <Control Name="High Charts">
-        <BasePath>\Files\4 K2 Pre Deploy\High Charts</BasePath>
-        <InstallBatchFile>\Files\4 K2 Pre Deploy\High Charts\RegisterCustomControl.bat</InstallBatchFile>
-      </Control>
+      </Control>-->
     </CustomControls>
     <CopyFiles>
-      <Copy Name="Resuable Documents">
+      <!--<Copy Name="Resuable Documents">
         <Source>\Files\4 K2 Pre Deploy\pre test.ps1</Source>
         <Destination>c:\k2\test\</Destination>
-      </Copy>
+      </Copy>-->
     </CopyFiles>
     <PowerShell>
-      <Cmdlet Name="pre test">\Files\4 K2 Pre Deploy\pre test.ps1</Cmdlet>
+      <!--<Cmdlet Name="pre test">\Files\4 K2 Pre Deploy\pre test.ps1</Cmdlet>-->
     </PowerShell>
   </PreDeploy>
   <SharePoint>
-    <App></App>
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Leave Request</ListName>
+      <Action>Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - Leave Request v1.1.kspx</Package>
+      <Create Type="List">
+        <List QuickLaunch="False">
+          <Name>Leave Request</Name>
+          <Description>Leave Request</Description>
+          <ListType>Events</ListType>
+          <CustomFields>
+          </CustomFields>
+          <ListData>
+          </ListData>
+        </List>
+      </Create>
+    </App>
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Support Engineers</ListName>
+      <Action>Appify</Action>
+    </App>
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech</SiteUrl>
+      <ListName>Leave Request</ListName>
+      <Action>Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - Leave Request v1.1.kspx</Package>
+    </App>
   </SharePoint>
   <Apps>
-
-    <App>
-      <Package>\Files\K2 Application Accelerator - Ad Hoc Tasks v1.0.kspx</Package>
+    <!--<App>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - Ad Hoc Tasks v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Application Accelerator - Expense Claim v1.0.kspx</Package>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - Expense Claim v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Application Accelerator - Incident Management v1.0.kspx</Package>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - Incident Management v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Application Accelerator - Leave Request v1.0.kspx</Package>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - Leave Request v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Application Accelerator - New Idea Submissions v1.0.kspx</Package>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - New Idea Submissions v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Application Accelerator - Travel Request v1.0.kspx</Package>
+      <Package>\Files\5 K2 Apps\K2 Application Accelerator - Travel Request v1.1.kspx</Package>
     </App>
     <App>
-      <Package>\Files\K2 Workdesk 2.1 for Application Accelerators.kspx</Package>
-    </App>
-
+      <Package>\Files\5 K2 Apps\20150812 Workdesk 2.1 for Applications Accelerators</Package>
+    </App>-->
   </Apps>
   <PostDeploy>
 		<WorkflowConfig>
-			<Workflow Name="Workflow\Leave Request Approval">
+			<!--<Workflow Name="Workflow\Expense Claim Approval ">
 				<ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
 			</Workflow>
       <Workflow Name="Workflow\Leave Request Approval">
         <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
       </Workflow>
-      <Workflow Name="Workflow\Leave Request Approval">
+      <Workflow Name="Workflow\New Idea Review ">
         <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
       </Workflow>
-      <Workflow Name="Workflow\Leave Request Approval">
+      <Workflow Name="Operations\Ad Hoc Task Review">
         <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
       </Workflow>
-      <Workflow Name="Workflow\Leave Request Approval">
+      <Workflow Name="Operations\Incident Resolution">
         <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
       </Workflow>
+      <Workflow Name="Finance\Travel Request Review">
+        <ProcessRights FQN="K2:DENALLIX\DOMAIN USERS" Type="group" Admin="true" Start="false" View="false" ViewParticipate="false" ServerEvent="false"/>
+      </Workflow>-->      
     </WorkflowConfig>
     <Roles>
-      <Role Name="HR">
-        <Include FQN="" Type="[group|user]"/>
-        <Exclude FQN="" Type="[group|user]"/>
+      <!--<Role Name="Finance Squad" DefaultFQN="K2:DENALLIX\ADMINISTRATOR" DefaultType="user">
+        <Include FQN="K2:DENALLIX\FINANCE" Type="group"/>
+        <Exclude FQN="K2:DENALLIX\BOB" Type="user"/>
+      </Role>-->
+      <!--<Role Name="Finance">
+        <Include FQN="K2:DENALLIX\FINANCE" Type="group"/>
+        <Exclude FQN="K2:DENALLIX\BOB" Type="user"/>
       </Role>
+      <Role Name="Finance Manager">
+        <Include FQN="K2:DENALLIX\BARRY" Type="user"/>
+        <Include FQN="K2:DENALLIX\CARL" Type="user"/>
+        <Include FQN="K2:DENALLIX\BOB" Type="user"/>
+      </Role>
+      <Role Name="HR">
+        <Include FQN="K2:DENALLIX\Human Resources" Type="group"/>
+        <Include FQN="K2:DENALLIX\CODI" Type="user"/>
+      </Role>
+      <Role Name="New Idea Reviewers">
+        <Include FQN="K2:DENALLIX\OPERATIONS" Type="group"/>
+      </Role>
+      <Role Name="New Idea Reward Committee">
+        <Include FQN="K2:DENALLIX\LEGAL" Type="group"/>
+        <Exclude FQN="K2:DENALLIX\JONNO" Type="user"/>
+      </Role>-->
     </Roles>
     <CopyFiles>
-      <Copy Name="Resuable Documents">
+      <!--<Copy Name="Resuable Documents">
         <Source>\Files\6 K2 Post Deploy\post test.ps1</Source>
         <Destination>c:\k2\test\</Destination>
-      </Copy>
+      </Copy>-->
     </CopyFiles>
     <PowerShell>
-      <Cmdlet Name="pre test">\Files\6 K2 Post Deploy\post test.ps1</Cmdlet>
+      <!--<Cmdlet Name="pre test">\Files\6 K2 Post Deploy\post test.ps1</Cmdlet>-->
     </PowerShell>
   </PostDeploy>
 </Environment>

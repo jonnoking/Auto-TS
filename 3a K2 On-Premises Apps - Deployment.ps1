@@ -7,8 +7,8 @@ $ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . $ScriptPath"\3z K2 On-Premises Apps - Functions.ps1"
 
 # Load Config
-[xml]$config = Get-Content $ScriptPath"\3 K2 On-Premises Apps - Config.xml"
-#[xml]$config = Get-Content $ScriptPath"\99 K2 On-Premises Try Now - Config.xml"
+#[xml]$config = Get-Content $ScriptPath"\3 K2 On-Premises Apps - Config.xml"
+[xml]$config = Get-Content $ScriptPath"\99 K2 On-Premises Try Now - Config.xml"
 
 set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil
 installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL'
@@ -30,17 +30,18 @@ $PackagePath = "C:\K2\SharePoint Apps\K2 Application Accelerator - Leave Request
 $SourceUrl = "https://portal.denallix.com/denallix-bellevue/Lists/Leave%20Approval/calendar.aspx"
 
 # WORKS
-Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SourceUrl $SourceUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
-return
+#Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SourceUrl $SourceUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
+#return
 #SET-K2SPRemoveK2ArtifactsFromList -ListId "eecc5ac4-99a6-4e05-94a2-e7781b3df8de"
 
 
-$SessionName = Set-K2SmOSPLoadPackage -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -PackagePath $PackagePath
-$SessionName = Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-$SessionName = Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-$SessionName = Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
-Set-K2SmODeployPackage -SessionName $SessionName
-Get-K2SmOSPCheckDeploymentStatus -SessionName $SessionName
+#$SessionName = Set-K2SmOSPLoadPackage -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -PackagePath $PackagePath
+
+#$SessionName = Set-K2SmOSPRefactorSharepointArtifacts -SiteUrl $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+#$SessionName = Set-K2SmOSPRefactorModel $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+#$SessionName = Set-K2SmOSPAutoResolve $SiteUrl -SiteName $SiteName -ListName $ListName -ListId $ListId -SessionName $SessionName
+#Set-K2SmODeployPackage -SessionName $SessionName
+#Get-K2SmOSPCheckDeploymentStatus -SessionName $SessionName
 
 #check status
 # need logic to keep checking
@@ -48,7 +49,7 @@ Get-K2SmOSPCheckDeploymentStatus -SessionName $SessionName
 
 
 
-return
+#return
 
 #New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\CODI" -Admin $false -Start $true -View $false -ViewParticipate $false -ServerEvent $false
 #New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow "Workflow\Leave Request Approval" -UserFQN "K2:DENALLIX\JONNO" -Admin $true -Start $true -View $false -ViewParticipate $false -ServerEvent $false
@@ -128,6 +129,76 @@ return
 
 # DEPLOY SHAREPOINT APPS
 
+$SharePointAppsConfig = $config.Environment.SharePoint
+foreach($SPAppConfig in $SharePointAppsConfig.App)
+{
+
+    # install K2 SharePoint apps or Appify lists and libraries
+    
+    Write-Host -ForegroundColor Yellow "STARTING: K2 SharePoint apps or Appify lists and libraries"
+
+    # Get SPWeb - verify it exists
+    $SPWeb = Get-SPWeb $SPAppConfig.SiteUrl
+
+    if ($SPWeb -eq $null) {
+        
+        Write-Host -ForegroundColor Red "Site doesn't exist. Stepping over."
+        continue
+    }
+
+    # Check if list exists - create if defined
+    $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
+
+    if ($SPAppConfig.Create -ne $null -and $List -eq $null) {
+        if($SPAppConfig.Create.Type.ToLower() -eq "list") {
+            
+            New-K2SPList -SPWeb $SPWeb -Library $SPAppConfig.Create.List 
+            $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
+            Add-K2DataToList -SPWeb $SPWeb -Library $SPAppConfig.Create.List -List $List
+            $List = $null
+
+        } else {
+            #assume library
+            New-K2SPList -SPWeb $SPWeb -Library $SPAppConfig.Create.List 
+            $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
+            New-K2EnableDocumentType -SPWeb $SPWeb -List $List
+            Add-K2DocumentsToLibrary -SPWeb $SPWeb -Library $SPAppConfig.Create.List -List $List
+            $List = $null
+        }
+    } 
+
+    if ($SPAppConfig.Create -eq $null -and $List -eq $null) {
+        Write-Host -ForegroundColor Red "List doesn't exist. You need to create it for this to work. Stepping over."
+        continue
+    }
+
+    $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
+
+    if ($SPAppConfig.Action.ToLower() -eq "appify") {
+        $SrcUrl = $SPAppConfig.BaseUrl + $List.DefaultViewUrl
+        Set-K2SmOSPGenerateK2ArtifactsOnList -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWeb.Name -ListName $SPAppConfig.ListName -ListId $List.ID -SourceUrl $SrcUrl -GenerateSmartForms $true -SetFormsUrl $true -GenerateReports $true
+    }
+
+    if ($SPAppConfig.Action.ToLower() -eq "deploy") {
+
+        $PackagePath = $ScriptPath+$SPAppConfig.Package
+
+        if ($SPWeb.Name -eq "") {
+
+        }
+
+        Deploy-K2SharePointPackage -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWeb.Name -ListName $SPAppConfig.ListName -ListId $List.ID -PackagePath $PackagePath
+    }
+
+    Write-Host -ForegroundColor Green "FINISHED: K2 SharePoint apps or Appify lists and libraries"
+    
+    $SPWeb = $null
+    $List = $null
+
+}
+
+
+
 #### TO DO
 
 
@@ -159,11 +230,11 @@ foreach($Workflow in $WorkflowConfig.Workflow)
     {
         if($WorkflowPermission.Type.ToLower() -eq "group")
         {
-            New-K2WorkflowGroupPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow $Workflow.Name -GroupFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
+            New-K2WorkflowGroupPermission -Workflow $Workflow.Name -GroupFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
         }
         else
         {
-            New-K2WorkflowUserPermission -K2WorkflowConnectionString $K2ConnectionString -Workflow $Workflow.Name -UserFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
+            New-K2WorkflowUserPermission $Workflow.Name -UserFQN $WorkflowPermission.FQN -Admin $WorkflowPermission.Admin -Start $WorkflowPermission.Start -View $WorkflowPermission.View -ViewParticipate $WorkflowPermission.ViewParticipate -ServerEvent $WorkflowPermission.ServerEvent
         }
     }
 }
@@ -172,9 +243,10 @@ foreach($Workflow in $WorkflowConfig.Workflow)
 $RolesConfig = $config.Environment.PostDeploy.Roles
 foreach($Role in $RolesConfig.Role)
 {
-    # Create Role if it doesn't exist - if role already exists nothing will happen
-    New-K2Role -Name $Role.Name
-
+    if ($Role.DefaultFQN -ne $null -and $Role.DefaulTyp -ne $null) {
+    # If there's a DefaultFQN it's assumed that it's a new role that needs to be created. If the role happens to already exists nothing will happen
+        New-K2Role -Name $Role.Name -DefaultRoleMember $Role.DefaultFQN -DefaultRoleMemberType $Role.DefaultType
+    }
     foreach($Include in $Role.Include)
     {
         New-K2RoleMember -K2ConnectionString $K2ConnectionString -Role $Role.Name -RoleMember $Include.FQN -RoleMemberType $Include.Type -IncludeExclude "include"

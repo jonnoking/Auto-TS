@@ -38,7 +38,7 @@ $SC = Get-SPSite $SCUrl
 #$SC = Get-SPWebApplication -Identity $SCUrl
 
 $AppName = "K2 blackpearl for SharePoint" #Appit app name?
-$newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 Setup\SharePoint App\K2 for SharePoint.app"
+$newPackagePath = "C:\Program Files (x86)\K2 blackpearl\K2 for SharePoint 2013 Setup\SharePoint On-premises\K2 for SharePoint.app"
 
 
 

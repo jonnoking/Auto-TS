@@ -37,7 +37,24 @@ $SPExists = (Get-SPSite $SCUrl -ErrorAction SilentlyContinue) -ne $null
 if ($SPExists -and $SCExists -ne "true")
 {
     Write-Host -ForegroundColor Red "Site Collection already exists and you're configuration file specifies not to overwrite it"
-    Remove-SPSite -Identity $SCUrl -GradualDelete -Confirm:$false
+    $P = 'Delete the existing Site Collection at: ' + $SCUrl + ' [Y|N]?'
+    $Delete = Read-Host -Prompt $P
+    
+    # Popup Prompt
+    #https://technet.microsoft.com/en-us/library/Ff730941.aspx
+
+    # Popup Prompt
+    #[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
+    #$computer = [Microsoft.VisualBasic.Interaction]::InputBox("Enter a computer name", "Computer", "$env:computername")
+
+
+
+    if ($Delete.ToLower() -eq "y" -or $Delete.ToLower() -eq "yes") {
+
+        Remove-SPSite -Identity $SCUrl -GradualDelete -Confirm:$false
+        Write-Host -ForegroundColor Red "Site Collection has been deleted"
+    }
+
     Write-Host -ForegroundColor Red "SCRIPTED HAS STOPPED"
     return
 }
@@ -151,7 +168,7 @@ foreach($Site in $SCSites.Site) {
 
 
     # Get Site - if it doesn't exist then create it
-    $NewSubSite = (Get-SPWeb $SiteUrl -ErrorAction SilentlyContinue) -ne $null
+    $NewSubSite = Get-SPWeb $SiteUrl -ErrorAction SilentlyContinue #) -ne $null
     if ($NewSubSite -eq $null -or $NewSubSite -eq $false) {
         $NewSubSite = New-SPWeb -Url $SiteUrl -Name $Site.Name -Description $Site.Description -Template (Get-SPWebTemplate $Site.Template) -AddToQuickLaunch:$true -AddToTopNav:$true -UseParentTopNav:$true -UniquePermissions:$false -Language $Site.Language
     }

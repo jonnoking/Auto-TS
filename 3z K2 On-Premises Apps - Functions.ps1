@@ -96,7 +96,7 @@ function Get-K2SmoClient {
 
 
 #0 Deploy SP Package
-function Set-K2SmOSPLoadPackage {
+function Deploy-K2SharePointPackage {
     [CmdletBinding()]
 
     param(
@@ -789,7 +789,9 @@ function Get-K2SmoManagementServer {
             $K2ConnectionString = Get-K2ConnectionString
         }
 
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.SmartObjects.Services.Management.dll")
+        $RefPath = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.SmartObjects.Services.Management.dll"
+        Add-Type -Path  $RefPath
+        
         $SmoManagementService = New-Object SourceCode.SmartObjects.Services.Management.ServiceManagementServer
 
         #Create connection and capture output (methods return a bool)
@@ -816,8 +818,12 @@ function RefreshManagementInstance()
 
         ##  Refresh ServiceInstance
         #  Load SourceCode.SmartObjects.Services.Management assembly
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.HostClientAPI.dll")
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.SmartObjects.Services.Management.dll")
+        $RefPath0 = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.HostClientAPI.dll"
+        Add-Type -Path  $RefPath0
+
+        $RefPath1 = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.SmartObjects.Services.Management.dll"
+        Add-Type -Path  $RefPath1
+
 
         #  Create connection string
         $connBuilder = New-Object SourceCode.Hosting.Client.BaseAPI.SCConnectionStringBuilder
@@ -851,7 +857,7 @@ function New-K2ServiceType {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=0)]
         [string]$ServiceTypeSystemName,
@@ -868,6 +874,11 @@ function New-K2ServiceType {
     )
 
     process {
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
+
         $SmoManagementService = Get-K2SmoManagementServer -K2ConnectionString $K2ConnectionString
 
         if ($ServiceTypeGuid -eq $null) {
@@ -902,8 +913,8 @@ function Get-K2SmoManagementServer {
             $K2ConnectionString = Get-K2ConnectionString
         }
 
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.SmartObjects.Services.Management.dll")
-        $SmoManagementService = New-Object SourceCode.SmartObjects.Services.Management.ServiceManagementServer
+        $RefPath = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.SmartObjects.Services.Management.dll"
+        Add-Type -Path  $RefPath
 
         #Create connection and capture output (methods return a bool)
         $tmpOut = $SmoManagementService.CreateConnection()
@@ -973,12 +984,18 @@ function Get-K2RoleManagementServer {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString
     )
 
     process {
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.Security.UserRoleManager.Management.dll")
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
+        $RefPath = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.Security.UserRoleManager.Management.dll"
+        Add-Type -Path  $RefPath
+
         $RoleManagementService = New-Object SourceCode.Security.UserRoleManager.Management.UserRoleManager
 
         #Create connection and capture output (methods return a bool)
@@ -994,19 +1011,26 @@ function New-K2Role {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=1)]
         [string]$Name,        
-        [Parameter(Mandatory=$false,Position=2)]
-        [string]$Description,        
-        [Parameter(Mandatory=$false,Position=3)]
-        [bool]$IsDynamic,        
+        [Parameter(Mandatory=$True,Position=2)]
+        [string]$DefaultRoleMember,        
+        [Parameter(Mandatory=$True,Position=3)]
+        [string]$DefaultRoleMemberType,        
         [Parameter(Mandatory=$false,Position=4)]
+        [string]$Description,        
+        [Parameter(Mandatory=$false,Position=5)]
+        [string]$IsDynamic,        
+        [Parameter(Mandatory=$false,Position=6)]
         [int]$RefreshInterval        
     )
 
     process {
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
 
         Write-Host -ForegroundColor Yellow "STARTING: Creating Role " $Name                
 
@@ -1014,7 +1038,7 @@ function New-K2Role {
 
         $K2Role = $null
         
-        $K2Role = $RoleManagementService.GetRole($Role)
+        $K2Role = $RoleManagementService.GetRole($Name)
 
         if ($K2Role -eq $null) {
 
@@ -1029,6 +1053,26 @@ function New-K2Role {
                 $K2Role.Interval = $RefreshInterval
             }
 
+
+            $RoleItem = $null
+
+            switch($DefaultRoleMemberType.ToLower())
+            {
+                "user" 
+                    {
+                        $NewItem = New-Object SourceCode.Security.UserRoleManager.Management.UserItem
+                        $NewItem.Name = $DefaultRoleMember.ToUpper()
+                        $RoleItem = $NewItem
+                    }
+                "group"
+                    {
+                        $NewItem = New-Object SourceCode.Security.UserRoleManager.Management.GroupItem
+                        $NewItem.Name = $DefaultRoleMember.ToUpper()
+                        $RoleItem = $NewItem
+                    }
+            }
+
+            $K2Role.Include.Add($RoleItem)
             $RoleManagementService.CreateRole($K2Role)
 
         } 
@@ -1054,7 +1098,7 @@ function Get-K2RoleExists {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=1)]
         [string]$Name,
@@ -1068,6 +1112,10 @@ function Get-K2RoleExists {
 
     process {
 
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
         Write-Host -ForegroundColor Green "STARTING: Check if Role Exists " $Name
         
         $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
@@ -1075,7 +1123,7 @@ function Get-K2RoleExists {
 
         $K2Role = $null
         
-        $K2Role = $RoleManagementService.GetRole($Role)
+        $K2Role = $RoleManagementService.GetRole($Name)
 
 
         Write-Host -ForegroundColor Green "FINISHED: Check if Role Exists " $Name
@@ -1098,7 +1146,7 @@ function New-K2RoleMember {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=1)]
         [string]$Role,
@@ -1111,6 +1159,11 @@ function New-K2RoleMember {
     )
 
     process {
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
         if ($IncludeExclude -eq "") {
             $IncludeExclude = "include"
         }
@@ -1121,6 +1174,13 @@ function New-K2RoleMember {
         $K2Role = $RoleManagementService.GetRole($Role)
 
         Write-Host -ForegroundColor Yellow "STARTING: Adding member to role" $K2Role.Name                
+
+        # CHECK IF ROLEMEMBER ALREADY EXISTS
+        $RMType = Get-K2RoleMember -Role $Role -RoleMember $RoleMember
+        if ($RMType -ne "") {
+            Delete-K2RoleMember -Role $Role -RoleMember $RoleMember
+        }
+
 
         $RoleItem = $null
 
@@ -1164,7 +1224,7 @@ function Delete-K2RoleMember {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=1)]
         [string]$Role,
@@ -1173,6 +1233,10 @@ function Delete-K2RoleMember {
     )
 
     process {
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
 
         $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
 
@@ -1224,7 +1288,7 @@ function Get-K2RoleMember {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2ConnectionString,
         [Parameter(Mandatory=$true,Position=1)]
         [string]$Role,
@@ -1233,6 +1297,10 @@ function Get-K2RoleMember {
     )
 
     process {
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
 
         $RoleManagementService = Get-K2RoleManagementServer -K2ConnectionString $K2ConnectionString
 
@@ -1274,17 +1342,24 @@ function Get-K2WorkflowManagementServer {
     [CmdletBinding()]
 
     param(
-        [Parameter(Mandatory=$true,Position=0)]
+        [Parameter(Mandatory=$false,Position=0)]
         [string]$K2WorkflowConnectionString
     )
 
     process {
-        Add-Type -Path (Get-K2BlackPearlDirectory + "\Bin\SourceCode.Workflow.Management.dll")
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
+        $RefPath = Join-Path (Get-K2BlackPearlDirectory) -ChildPath "\Bin\SourceCode.Workflow.Management.dll"
+        Add-Type -Path  $RefPath
+
         $WFManagementService = New-Object SourceCode.Workflow.Management.WorkflowManagementServer
 
         #Create connection and capture output (methods return a bool)
         $tmpOut = $WFManagementService.CreateConnection()
-        $tmpOut = $WFManagementService.Connection.Open($K2WorkflowConnectionString);
+        $tmpOut = $WFManagementService.Connection.Open($K2ConnectionString);
 
         Write-Output $WFManagementService
     }
@@ -1296,25 +1371,30 @@ function New-K2WorkflowUserPermission {
 
     param(
         [Parameter(Mandatory=$true,Position=0)]
-        [string]$K2WorkflowConnectionString,
-        [Parameter(Mandatory=$true,Position=1)]
         [string]$Workflow,
+        [Parameter(Mandatory=$true,Position=1)]
+        [string]$GroupFQN,
         [Parameter(Mandatory=$true,Position=2)]
-        [string]$UserFQN,
+        [string]$Admin,
         [Parameter(Mandatory=$true,Position=3)]
-        [bool]$Admin,
+        [string]$Start,
         [Parameter(Mandatory=$true,Position=4)]
-        [bool]$Start,
+        [string]$View,
         [Parameter(Mandatory=$true,Position=5)]
-        [bool]$View,
+        [string]$ViewParticipate,
         [Parameter(Mandatory=$true,Position=6)]
-        [bool]$ViewParticipate,
-        [Parameter(Mandatory=$true,Position=7)]
-        [bool]$ServerEvent
+        [string]$ServerEvent,
+        [Parameter(Mandatory=$false,Position=7)]
+        [string]$K2WorkflowConnectionString
 
     )
 
     process {
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
         $WFManagementService = Get-K2WorkflowManagementServer -K2WorkflowConnectionString $K2WorkflowConnectionString
         
 
@@ -1343,11 +1423,11 @@ function New-K2WorkflowUserPermission {
         {
             #Update existing permission
 
-            $ExistingPermissions.Admin = $Admin
-            $ExistingPermissions.Start = $Start
-            $ExistingPermissions.View = $View
-            $ExistingPermissions.ViewPart = $ViewParticipate
-            $ExistingPermissions.ServerEvent = $ServerEvent
+            $ExistingPermissions.Admin = [System.Convert]::ToBoolean($Admin)
+            $ExistingPermissions.Start = [System.Convert]::ToBoolean($Start)
+            $ExistingPermissions.View = [System.Convert]::ToBoolean($View)
+            $ExistingPermissions.ViewPart = [System.Convert]::ToBoolean($ViewParticipate)
+            $ExistingPermissions.ServerEvent = [System.Convert]::ToBoolean($ServerEvent)
 
         }
         else 
@@ -1358,11 +1438,11 @@ function New-K2WorkflowUserPermission {
             $ExistingPermissions.UserName = $UserFQN.ToUpper()
             $ExistingPermissions.ProcessFullName = $Process.FullName
             $ExistingPermissions.ProcSetID = $Process.ProcSetID
-            $ExistingPermissions.Admin = $Admin
-            $ExistingPermissions.Start = $Start
-            $ExistingPermissions.View = $View
-            $ExistingPermissions.ViewPart = $ViewParticipate
-            $ExistingPermissions.ServerEvent = $ServerEvent
+            $ExistingPermissions.Admin = [System.Convert]::ToBoolean($Admin)
+            $ExistingPermissions.Start = [System.Convert]::ToBoolean($Start)
+            $ExistingPermissions.View = [System.Convert]::ToBoolean($View)
+            $ExistingPermissions.ViewPart = [System.Convert]::ToBoolean($ViewParticipate)
+            $ExistingPermissions.ServerEvent = [System.Convert]::ToBoolean($ServerEvent)
 
         }
         
@@ -1387,25 +1467,30 @@ function New-K2WorkflowGroupPermission {
 
     param(
         [Parameter(Mandatory=$true,Position=0)]
-        [string]$K2WorkflowConnectionString,
-        [Parameter(Mandatory=$true,Position=1)]
         [string]$Workflow,
-        [Parameter(Mandatory=$true,Position=2)]
+        [Parameter(Mandatory=$true,Position=1)]
         [string]$GroupFQN,
+        [Parameter(Mandatory=$true,Position=2)]
+        [string]$Admin,
         [Parameter(Mandatory=$true,Position=3)]
-        [bool]$Admin,
+        [string]$Start,
         [Parameter(Mandatory=$true,Position=4)]
-        [bool]$Start,
+        [string]$View,
         [Parameter(Mandatory=$true,Position=5)]
-        [bool]$View,
+        [string]$ViewParticipate,
         [Parameter(Mandatory=$true,Position=6)]
-        [bool]$ViewParticipate,
-        [Parameter(Mandatory=$true,Position=7)]
-        [bool]$ServerEvent
+        [string]$ServerEvent,
+        [Parameter(Mandatory=$false,Position=7)]
+        [string]$K2WorkflowConnectionString
 
     )
 
     process {
+
+        if ($K2ConnectionString -eq "") {
+            $K2ConnectionString = Get-K2ConnectionString
+        }
+
         $WFManagementService = Get-K2WorkflowManagementServer -K2WorkflowConnectionString $K2WorkflowConnectionString
         
 
@@ -1434,11 +1519,11 @@ function New-K2WorkflowGroupPermission {
         {
             #Update existing permission
 
-            $ExistingPermissions.Admin = $Admin
-            $ExistingPermissions.Start = $Start
-            $ExistingPermissions.View = $View
-            $ExistingPermissions.ViewPart = $ViewParticipate
-            $ExistingPermissions.ServerEvent = $ServerEvent
+            $ExistingPermissions.Admin = [System.Convert]::ToBoolean($Admin)
+            $ExistingPermissions.Start = [System.Convert]::ToBoolean($Start)
+            $ExistingPermissions.View = [System.Convert]::ToBoolean($View)
+            $ExistingPermissions.ViewPart = [System.Convert]::ToBoolean($ViewParticipate)
+            $ExistingPermissions.ServerEvent = [System.Convert]::ToBoolean($ServerEvent)
 
         }
         else 
@@ -1449,11 +1534,11 @@ function New-K2WorkflowGroupPermission {
             $ExistingPermissions.GroupName = $GroupFQN.ToUpper()
             $ExistingPermissions.ProcessFullName = $Process.FullName
             $ExistingPermissions.ProcSetID = $Process.ProcSetID
-            $ExistingPermissions.Admin = $Admin
-            $ExistingPermissions.Start = $Start
-            $ExistingPermissions.View = $View
-            $ExistingPermissions.ViewPart = $ViewParticipate
-            $ExistingPermissions.ServerEvent = $ServerEvent
+            $ExistingPermissions.Admin = [System.Convert]::ToBoolean($Admin)
+            $ExistingPermissions.Start = [System.Convert]::ToBoolean($Start)
+            $ExistingPermissions.View = [System.Convert]::ToBoolean($View)
+            $ExistingPermissions.ViewPart = [System.Convert]::ToBoolean($ViewParticipate)
+            $ExistingPermissions.ServerEvent = [System.Convert]::ToBoolean($ServerEvent)
 
         }
         

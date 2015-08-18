@@ -6,7 +6,7 @@
     <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
     <SiteAdminUrl>https://k2loud-admin.sharepoint.com</SiteAdminUrl>
   </Settings>
-  <SiteCollection Exists="false">
+  <SiteCollection Exists="true">
     <Name>Jonno Tech</Name>
     <UrlName>jonnotech</UrlName>
     <Description>Jonno Tech</Description>
@@ -170,6 +170,15 @@
             <Field Property="Engineer" Type="User">jonno@denallix.com</Field>
             <Field Property="Support Category">Hardware</Field>
           </Item>
+        </ListData>
+      </List>
+      <List QuickLaunch="True">
+        <Name>Leave Request</Name>
+        <Description>Leave Request</Description>
+        <ListType>Events</ListType>
+        <CustomFields>
+        </CustomFields>
+        <ListData>
         </ListData>
       </List>
     </Lists>
