@@ -34,6 +34,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SourceCode.Categories.Client, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\K2 blackpearl\Bin\SourceCode.Categories.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="SourceCode.Forms.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\K2 blackpearl\K2 smartforms Runtime\bin\SourceCode.Forms.Management.dll</HintPath>
+    </Reference>
     <Reference Include="SourceCode.HostClientAPI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files (x86)\K2 blackpearl\Bin\SourceCode.HostClientAPI.dll</HintPath>
@@ -42,9 +50,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files (x86)\K2 blackpearl\Bin\SourceCode.SmartObjects.Client.dll</HintPath>
     </Reference>
+    <Reference Include="SourceCode.SmartObjects.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\K2 blackpearl\Bin\SourceCode.SmartObjects.Management.dll</HintPath>
+    </Reference>
     <Reference Include="SourceCode.Workflow.Client, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Program Files (x86)\K2 blackpearl\Host Server\Bin\SourceCode.Workflow.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="SourceCode.Workflow.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\K2 blackpearl\Bin\SourceCode.Workflow.Management.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

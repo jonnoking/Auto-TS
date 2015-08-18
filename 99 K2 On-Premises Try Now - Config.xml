@@ -24,11 +24,11 @@
     </PowerShell>
   </PreDeploy>
   <SharePoint>
-    <!--<App>
+    <App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
       <ListName>Leave Request</ListName>
-      <Action>Deploy</Action>
+      <Action GenerateSmartForms="false" GenerateReports="false">Deploy</Action>
       <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - Leave Request v1.1.kspx</Package>
       <Create Type="List">
         <List QuickLaunch="true">
@@ -41,7 +41,7 @@
           </ListData>
         </List>
       </Create>
-    </App>-->
+    </App>
     <App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>

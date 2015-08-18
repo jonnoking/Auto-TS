@@ -16,6 +16,10 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SourceCode.SmartObjects.Client;
 using System.Web;
+using SourceCode.Forms.Management;
+using SourceCode.Categories.Client;
+using SourceCode.SmartObjects.Management;
+using SourceCode.Workflow.Management;
 
 
 namespace K2Field.API.Demo
@@ -226,9 +230,100 @@ namespace K2Field.API.Demo
             return mimeType;
         }
 
-        public string GetMimeType(FileInfo fileInfo)
+        public string GetMimeType(System.IO.FileInfo fileInfo)
         {
             return GetMimeType(fileInfo.Extension.ToLower());
+        }
+
+        private void btnDeleteSmartForms_Click(object sender, RoutedEventArgs e)
+        {
+            SourceCode.Hosting.Client.BaseAPI.SCConnectionStringBuilder SCCS = new SourceCode.Hosting.Client.BaseAPI.SCConnectionStringBuilder();
+            SCCS.Host = "localhost";
+            SCCS.Port = 5555;
+            SCCS.IsPrimaryLogin = true;
+            SCCS.Integrated = true;
+
+            FormsManager formsmgr = new FormsManager();
+            formsmgr.CreateConnection();
+            formsmgr.Connection.Open(SCCS.ConnectionString);
+
+            CategoryServer categorysvr = new CategoryServer();
+            categorysvr.CreateConnection();
+            categorysvr.Connection.Open(SCCS.ConnectionString);
+            CategoryManager categorymgr = categorysvr.GetCategoryManager(1, true);
+
+            Category Root = categorymgr.RootCategory;
+            Category App = Root.CategoryManager.Categories.GetCategoryById(30365);
+            //30332
+            
+            SmartObjectManagementServer soManager = new SmartObjectManagementServer();
+            soManager.Connection = soManager.CreateConnection();
+            soManager.Connection.Open(SCCS.ConnectionString);
+
+            ContextCollection contexts = new ContextCollection();
+            foreach(var item in App.DataList)
+            {
+                if (item.DataType.ToString().Equals("view", StringComparison.InvariantCultureIgnoreCase) || item.DataType.ToString().Equals("form", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Guid guid = new Guid(item.Data);
+
+                    if (!contexts.Contains(guid))
+                    {
+                        contexts.Add(new Context(item.DataType.ToString().Equals("view", StringComparison.InvariantCultureIgnoreCase) ? ContextType.View : ContextType.Form, guid));
+                    }
+                }
+            }
+            if (contexts.Count > 0)
+            {
+                formsmgr.DeleteContexts(contexts);
+            }
+
+            foreach (var item in App.DataList)
+            {
+                if (item.DataType.ToString().Equals("smartobject", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Guid soid = new Guid(item.Data);
+                    soManager.DeleteSmartObject(soid, true);
+                }
+            }
+
+            var sos = from o in App.DataList where o.DataType.ToString().ToLower() == "thinclientprocess" select o.Data;
+
+            var i = 0;
+
+            // make smartobject call to SharePoint Integration Worfklow - get List - pass in SharePoint Settings Id
+            // get first row
+
+
+            WorkflowManagementServer WFS = new WorkflowManagementServer();
+            WFS.CreateConnection();
+            WFS.Connection.Open(SCCS.ConnectionString);
+
+            SourceCode.Workflow.Management.Criteria.ProcessCriteriaFilter filter = new SourceCode.Workflow.Management.Criteria.ProcessCriteriaFilter();
+            filter.AddRegularFilter(ProcessFields.ProcessFullName, SourceCode.Workflow.Management.Criteria.Comparison.Equals, @"Employee Leave Request\Leave Request");
+            Processes z = WFS.GetProcesses(filter);
+
+            //Process P = WFS.GetProcess(Convert.ToInt32(sos.First()));
+            //string WFName = P.FullName;
+
+            //var PSetId = P.ProcSetID;
+            
+            //ProcessSet PS = WFS.GetProcSet(PSetId);
+
+            //WFS.DeleteProcessDefinition(WFName, 0, true);
+            //Processes Pses = WFS.GetProcessVersions(z);
+            foreach(Process pcs in z)
+            {
+                // exception - can't delete default version
+                WFS.DeleteProcessDefinition(pcs.FullName, pcs.VersionNumber, true);
+                
+            }
+
+
+            
+
+
+
         }
     }
 }

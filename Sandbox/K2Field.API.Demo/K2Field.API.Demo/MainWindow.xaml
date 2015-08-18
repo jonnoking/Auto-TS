@@ -4,6 +4,7 @@
         Title="MainWindow" Height="350" Width="525">
     <Grid>
         <Button x:Name="btnCallSmartObject" Content="Call SmartObject" HorizontalAlignment="Left" Margin="20,45,0,0" VerticalAlignment="Top" Width="127" Click="btnCallSmartObject_Click"/>
+        <Button x:Name="btnDeleteSmartForms" Content="Delete SmartForms" HorizontalAlignment="Left" Margin="336,87,0,0" VerticalAlignment="Top" Width="125" Click="btnDeleteSmartForms_Click"/>
 
     </Grid>
 </Window>
