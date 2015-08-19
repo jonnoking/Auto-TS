@@ -6,7 +6,7 @@
     <SiteBaseUrl>https://portal.denallix.com</SiteBaseUrl>
     <SiteAdminUrl>https://k2loud-admin.sharepoint.com</SiteAdminUrl>
   </Settings>
-  <SiteCollection Exists="true">
+  <SiteCollection Exists="false">
     <Name>Jonno Tech</Name>
     <UrlName>jonnotech</UrlName>
     <Description>Jonno Tech</Description>

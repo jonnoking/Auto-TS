@@ -45,6 +45,78 @@
     <App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Issue Tracking</ListName>
+      <Action GenerateSmartForms="false" GenerateReports="false">Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - IT Support ticket v1.1.B.kspx</Package>
+      <Create Type="List">
+        <List QuickLaunch="true">
+          <Name>Issue Tracking</Name>
+          <Description>Issue Tracking</Description>
+          <ListType>IssueTracking</ListType>
+          <CustomFields>
+          </CustomFields>
+          <ListData>
+          </ListData>
+        </List>
+      </Create>
+    </App>
+    <!--<App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Task Management</ListName>
+      <Action GenerateSmartForms="false" GenerateReports="false">Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator – Task Management v 1.1.kspx</Package>
+      <Create Type="List">
+        <List QuickLaunch="true">
+          <Name>Task Management</Name>
+          <Description>Task Management</Description>
+          <ListType>Tasks</ListType>
+          <CustomFields>
+          </CustomFields>
+          <ListData>
+          </ListData>
+        </List>
+      </Create>
+    </App>-->
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Team Annoucenments</ListName>
+      <Action GenerateSmartForms="false" GenerateReports="false">Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - Publish Announcement v1.1.kspx</Package>
+      <Create Type="List">
+        <List QuickLaunch="true">
+          <Name>Team Annoucenments</Name>
+          <Description>Team Annoucements</Description>
+          <ListType>Announcements</ListType>
+          <CustomFields>
+          </CustomFields>
+          <ListData>
+          </ListData>
+        </List>
+      </Create>
+    </App>
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
+      <ListName>Jonno Contract Review</ListName>
+      <Action GenerateSmartForms="false" GenerateReports="false">Deploy</Action>
+      <Package>\Files\5 K2 Apps\K2 SharePoint Accelerator - Document Review v1.1.kspx</Package>
+      <Create Type="Library">
+        <List QuickLaunch="true">
+          <Name>Jonno Contract Review</Name>
+          <Description>Jonn Contract Review</Description>
+          <ListType>DocumentLibrary</ListType>
+          <CustomFields>
+          </CustomFields>
+          <ListData>
+          </ListData>
+        </List>
+      </Create>
+    </App>
+    <App>
+      <BaseUrl>https://portal.denallix.com</BaseUrl>
+      <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
       <ListName>Support Engineers</ListName>
       <Action GenerateSmartForms="true" GenerateReports="false">Appify</Action>
     </App>

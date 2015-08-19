@@ -155,6 +155,7 @@ foreach($SPAppConfig in $SharePointAppsConfig.App)
     }
 
     # Check if list exists - create if defined
+    $List = $null
     $List = Get-K2SPList -SPWeb $SPWeb -ListName $SPAppConfig.ListName
 
     if ($SPAppConfig.Create -ne $null -and $List -eq $null) {
