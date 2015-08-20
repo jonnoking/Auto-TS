@@ -197,7 +197,10 @@ foreach($SPAppConfig in $SharePointAppsConfig.App)
         }
 
         $SessionName = Deploy-K2SharePointPackage -SiteUrl $SPAppConfig.SiteUrl -SiteName $SPWebName -ListName $SPAppConfig.ListName -ListId $List.ID -PackagePath $PackagePath
-    
+        
+        if ($SessionName -eq "") {
+            $jjk = 99
+        }
     
         $counter = 1;
         $maximum = 10;

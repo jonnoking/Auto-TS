@@ -24,7 +24,7 @@
     </PowerShell>
   </PreDeploy>
   <SharePoint>
-    <App>
+    <!--<App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
       <ListName>Leave Request</ListName>
@@ -41,7 +41,7 @@
           </ListData>
         </List>
       </Create>
-    </App>
+    </App>-->
     <App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
@@ -78,7 +78,7 @@
         </List>
       </Create>
     </App>-->
-    <App>
+    <!--<App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
       <ListName>Team Annoucenments</ListName>
@@ -113,7 +113,7 @@
           </ListData>
         </List>
       </Create>
-    </App>
+    </App>-->
     <App>
       <BaseUrl>https://portal.denallix.com</BaseUrl>
       <SiteUrl>https://portal.denallix.com/sites/jonnotech/Employee</SiteUrl>
