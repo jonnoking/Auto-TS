@@ -9,29 +9,6 @@ if ($Continue -ne "Y" -and $Continue -ne "Yes")
 }
 
 
-
-set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil 
-installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL' 
-installutil -i /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL'
-Add-PSSnapin SourceCode.Deployment.PowerShell
-return
-
-#Get K2 Connection String
-$K2ConnectionString = Get-K2ConnectionString
-
-$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
-
-
-Get-ChildItem -Path $ScriptPath"\*" -Include *.kspx | 
-Foreach-Object{
-    #foreach KSPX found deploy package   
-    Deploy-Package ($_.FullName) -ConnectionString $K2ConnectionString.ConnectionString -NoAnalyze -ErrorAction Inquire    
-
-}
-
-$K2ConnectionString = $null
-
-
 function Get-K2ConnectionString {
 <#
 	.Synopsis
@@ -71,4 +48,32 @@ function Get-K2ConnectionString {
 		Write-Output $conn
 	}
 }
+
+set-alias installutil $env:windir\Microsoft.NET\Framework64\v4.0.30319\installutil | Out-Null
+installutil -u /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL' | Out-Null
+installutil -i /AssemblyName 'SourceCode.Deployment.PowerShell, Version=4.0.0.0, Culture=neutral, PublicKeyToken=16a2c5aaaa1b130d, processorArchitecture=MSIL' | Out-Null
+Add-PSSnapin SourceCode.Deployment.PowerShell
+
+
+#Get K2 Connection String
+$K2ConnectionString = Get-K2ConnectionString
+
+$ScriptPath = split-path -parent $MyInvocation.MyCommand.Definition
+
+Write-Host "Packages Found: "( Get-ChildItem $ScriptPath"\*" -Include *.kspx | Measure-Object ).Count -ForegroundColor Green;
+
+Get-ChildItem -Path $ScriptPath"\*" -Include *.kspx | 
+Foreach-Object{
+    #foreach KSPX found deploy package   
+
+    # NoAnalyze - will overwrite all objects
+    #Deploy-Package ($_.FullName) -ConnectionString $K2ConnectionString.ConnectionString -NoAnalyze -ErrorAction Inquire    
+
+    Deploy-Package ($_.FullName) -ConnectionString $K2ConnectionString.ConnectionString -ErrorAction Inquire    
+}
+
+$K2ConnectionString = $null
+
+
+
  
