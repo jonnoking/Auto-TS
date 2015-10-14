@@ -1589,3 +1589,27 @@ function New-K2WorkflowGroupPermission {
 
     }
 }
+
+
+## From Paul Kelly
+function Delete-AllProcesses
+{
+[CmdletBinding()]
+                Param([string]$server,
+                                  [int]$port)
+                BEGIN
+                {
+                                $workflowManagementServer = Get-K2WorkflowManagementServer -server $server -port $port
+                }
+                PROCESS
+                {
+                                $workflowManagementServer.GetProcSets() | ForEach-Object {                
+                                                Write-Verbose "Deleting process $($_.FullName)"
+                                                $workflowManagementServer.DeleteProcessDefinition($_.FullName, 0, $true) | Out-Null
+                                }
+                }
+                END
+                {
+                                Close-K2Connection $workflowManagementServer
+                }
+}
